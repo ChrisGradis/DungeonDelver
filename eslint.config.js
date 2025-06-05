@@ -1,17 +1,32 @@
-import javascript from "@eslint/js";
+import js from "@eslint/js";
+import html from "@html-eslint/eslint-plugin";
 import prettier from "eslint-config-prettier";
+import { defineConfig } from "eslint/config";
+import globals from "globals";
 
-export default [
-    javascript.configs.recommended,
+export default defineConfig([
+    {
+        ...html.configs["flat/recommended"],
+
+        files: ["src/**/*.html"],
+    },
+    {
+        files: ["src/**/*.js"],
+        languageOptions: { globals: globals.browser },
+    },
+    {
+        files: ["src/**/*.js"],
+        plugins: { js },
+        extends: ["js/recommended"],
+    },
     prettier,
     {
-        ignores: ["external/", "node_modules/"],
+        ignores: ["node_modules/"],
     },
     {
         rules: {
             "import/no-anonymous-default-export": "off",
-            "no-console": "warn",
             "no-control-regex": "off",
         },
     },
-];
+]);
