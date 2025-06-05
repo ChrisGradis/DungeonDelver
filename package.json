@@ -3,6 +3,7 @@
     "type": "module",
     "version": "0.1.0",
     "scripts": {
+        "start": "live-server --cors --no-browser --entry-file=src/index.html --port=3000",
         "format": "prettier --write .",
         "lint": "eslint ."
     },
@@ -14,6 +15,7 @@
         "@ianvs/prettier-plugin-sort-imports": "^4.4.2",
         "eslint": "^9.28.0",
         "eslint-config-prettier": "^9.1.0",
+        "live-server": "^1.2.2",
         "prettier": "^3.5.3",
         "prettier-plugin-sort-json": "^4.1.1"
     }
