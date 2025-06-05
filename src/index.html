@@ -443,6 +443,142 @@
         </div>
 
         <script>
+            const GAME_CONSTANTS = {
+                LOG_MAX_ENTRIES: 40,
+                INITIAL_PLAYER_STATS: {
+                    LEVEL: 1,
+                    XP: 0,
+                    XP_TO_NEXT_LEVEL: 65,
+                    CURRENT_HP: 25,
+                    MAX_HP: 25,
+                    BASE_ATTACK: 3,
+                    BASE_DEFENSE: 1,
+                    POTIONS: 3,
+                    MAX_POTIONS: 50,
+                    GOLD: 0,
+                    DEFAULT_WEAPON: {
+                        name: "Old Stick",
+                        type: "weapon",
+                        bonus: 0,
+                        rarity: "Common",
+                        attackBonus: 0,
+                        defenseBonus: 0,
+                    },
+                    DEFAULT_ARMOR: {
+                        name: "Torn Shirt",
+                        type: "armor",
+                        bonus: 0,
+                        rarity: "Common",
+                    },
+                    DEFAULT_ACCESSORY: {
+                        name: "None",
+                        type: "accessory",
+                        rarity: "Common",
+                        description: "No bonus",
+                        bonuses: {},
+                    },
+                },
+                POTION_HEAL_BASE_PERCENT: 0.45,
+                POTION_HEAL_LEVEL_MULTIPLIER: 0.001,
+                PLAYER_BASE_CRIT_CHANCE: 0.05,
+                PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER: 0.003,
+                PLAYER_BASE_CRIT_DAMAGE_MULTIPLIER: 1.75,
+                PLAYER_CRIT_DAMAGE_LEVEL_MULTIPLIER: 0.005,
+                ENEMY_BASE_CRIT_CHANCE: 0.12,
+                ENEMY_CRIT_CHANCE_LEVEL_MULTIPLIER: 0.0005,
+                ENEMY_BASE_CRIT_DAMAGE_MULTIPLIER: 1.5,
+                ENEMY_CRIT_DAMAGE_LEVEL_MULTIPLIER: 0.002,
+                EXPLORE_EVENT_THRESHOLDS: {
+                    // Cumulative probabilities
+                    LOST_COLLECTOR: 0.02,
+                    POTION_CRATE: 0.04, // prev + 0.02
+                    MERCHANT: 0.08, // prev + 0.04
+                    STRAY_POTION: 0.125, // prev + 0.045
+                    BLACKSMITH: 0.175, // prev + 0.05
+                    REST_HOUSE: 0.25, // prev + 0.075
+                    // ENEMY spawn is the remainder
+                },
+                BLACKSMITH_RARE_UPGRADE_CHANCE: 0.2,
+                BLACKSMITH_UPGRADE_VALUES: {
+                    RARE: [3, 4], // [Option1, Option2]
+                    COMMON: [1, 2],
+                },
+                BLACKSMITH_UPGRADE_RARE_ROLL_THRESHOLD: 0.5, // Chance for Option1 vs Option2 if RARE
+                BLACKSMITH_UPGRADE_COMMON_ROLL_THRESHOLD: 0.7, // Chance for Option1 vs Option2 if COMMON
+                POTION_CRATE_MIN_FOUND: 3,
+                POTION_CRATE_MAX_FOUND_EXCLUSIVE: 7, // Random will be from MIN to MAX-1
+                LEVEL_UP_XP_MULTIPLIERS: [
+                    // Sorted by minLevel descending
+                    { minLevel: 26, multiplier: 1.37 },
+                    { minLevel: 23, multiplier: 1.36 },
+                    { minLevel: 20, multiplier: 1.35 },
+                    { minLevel: 18, multiplier: 1.38 },
+                    { minLevel: 12, multiplier: 1.48 },
+                    { minLevel: 1, multiplier: 1.65 },
+                ],
+                LEVEL_UP_HP_GAIN: { BASE_PERCENT: 0.18, LEVEL_MULTIPLIER: 0.001, FLAT_BASE: 10 },
+                LEVEL_UP_ATTACK_GAIN: {
+                    BASE_PERCENT: 0.08,
+                    LEVEL_MULTIPLIER: 0.0005,
+                    EVEN_LEVEL_BONUS: 3,
+                    ODD_LEVEL_BONUS: 2,
+                    PER_4_LEVELS_BONUS: 1,
+                },
+                LEVEL_UP_DEFENSE_GAIN: {
+                    BASE_PERCENT: 0.07,
+                    LEVEL_MULTIPLIER: 0.0005,
+                    PER_3_LEVELS_BONUS: 2,
+                    OTHER_LEVELS_BONUS: 1,
+                    PER_5_LEVELS_BONUS: 1,
+                },
+                MERCHANT_XP_POTION: {
+                    BASE_COST_FACTOR: 0.12,
+                    LEVEL_COST_FACTOR: 0.0035,
+                    XP_MIN_PERCENT_OF_NEXT_LEVEL: 0.6,
+                    XP_RANDOM_ADDITIONAL_PERCENT: 0.25,
+                },
+                MERCHANT_POTION_COST: { BASE: 10, PER_LEVEL: 1.2, PER_MAX_HP: 0.035 },
+                ENEMY_SCALING: {
+                    LEVEL_TIER_DIVISOR: 4,
+                    HP_PER_LEVEL_ADVANTAGE_FACTOR: 0.055,
+                    HP_FLAT_PER_PLAYER_LEVEL: 0.65,
+                    ATK_PER_LEVEL_ADVANTAGE_FACTOR: 0.055,
+                    ATK_FLAT_PER_PLAYER_LEVEL: 0.35,
+                    DEF_PER_LEVEL_ADVANTAGE_FACTOR: 0.035,
+                    DEF_FLAT_PER_PLAYER_LEVEL: 0.18,
+                },
+                ELITE_MODIFIERS: {
+                    HP_MULTIPLIER: 1.75,
+                    ATK_MULTIPLIER: 1.4,
+                    DEF_MULTIPLIER: 1.4,
+                    XP_MULTIPLIER: 2.5,
+                    GOLD_MULTIPLIER: 2,
+                    LOOT_CHANCE_MULTIPLIER: 1.5,
+                    SPAWN_MIN_PLAYER_LEVEL: 15,
+                    SPAWN_CHANCE: 0.15,
+                },
+                SPECIAL_BOSS_LOOT: {
+                    WYRM_GUARDIAN: { ULTRA_CHANCE: 0.12, TRANSCENDENT_CHANCE: 0.007 },
+                    HIGH_TIER_REGULAR: { ULTRA_CHANCE: 0.03 }, // For Dread Knight, Nether Sorc etc.
+                    VOID_ETC_TRANSCENDENT_CHANCE: 0.004, // For Void Reaver, Infernal Jugg, Archlich
+                },
+                FINAL_BOSS_LOOT: {
+                    POTIONS_GAINED_BASE: 5,
+                    POTIONS_PER_5_PLAYER_LEVELS: 1,
+                    HIGH_ITEM_COUNT_BASE: 1,
+                    HIGH_ITEM_ADDITIONAL_CHANCE: 0.6,
+                    ETERNAL_DROP_CHANCE: 0.5,
+                    IMMORTAL_DROP_CHANCE: 0.35,
+                    TRANSCENDENT_DROP_CHANCE: 0.2,
+                },
+                LOST_COLLECTOR_XP_REWARD: {
+                    BASE_PERCENT_OF_NEXT_LEVEL: 0.3,
+                    PER_LEVEL_PERCENT: 0.005,
+                },
+                LOST_COLLECTOR_GEAR_BONUS_BASE: 5,
+                LOST_COLLECTOR_GEAR_BONUS_PER_4_LEVELS: 1,
+            };
+
             let player;
             let currentEnemy = null;
             let inCombat = false;
@@ -451,8 +587,8 @@
             let currentMerchantOffers = [];
             let pendingPurchaseAction = null;
 
-            // NEW: Accessories Data
             const accessories = [
+                /* Accessory data remains the same */
                 {
                     name: "Worn Locket",
                     type: "accessory",
@@ -542,8 +678,8 @@
                     description: "+30 Max HP, +5 DEF, +10.0% Potion Heal",
                 },
             ];
-
             const enemies = [
+                /* Enemy data remains the same */
                 // Early Game (Player Lvl 1-5)
                 {
                     name: "Slime",
@@ -1066,7 +1202,7 @@
                     isFinalBoss: true,
                     goldDropRange: [3000, 5500],
                     lootTable: [],
-                },
+                }, // Loot for final boss is handled specially
                 {
                     name: "Lost Collector",
                     isSpecial: true,
@@ -1074,9 +1210,10 @@
                     baseAttack: 1,
                     baseDefense: 5,
                     goldDropRange: [500, 1000],
-                },
+                }, // XP and other loot handled specially
             ];
             const itemStatsByRarity = {
+                /* This data remains the same */
                 Common: {
                     weaponBonus: [1, 3],
                     armorBonus: [1, 3],
@@ -1141,6 +1278,7 @@
                 },
             };
             const baseItemTypes = {
+                /* This data remains the same */
                 weapon: [
                     "Dagger",
                     "Shortsword",
@@ -1189,6 +1327,7 @@
                 ],
             };
 
+            // DOM Element References (using const)
             const playerLevelEl = document.getElementById("player-level");
             const playerXpEl = document.getElementById("player-xp");
             const playerHpEl = document.getElementById("player-hp");
@@ -1237,9 +1376,9 @@
 
             function addLog(message) {
                 const p = document.createElement("p");
-                p.innerHTML = message;
+                p.innerHTML = message; // Using innerHTML as messages can contain HTML styling
                 logEl.insertBefore(p, logEl.firstChild);
-                if (logEl.children.length > 40) {
+                if (logEl.children.length > GAME_CONSTANTS.LOG_MAX_ENTRIES) {
                     logEl.removeChild(logEl.lastChild);
                 }
             }
@@ -1249,7 +1388,7 @@
                     accessory.description = "No bonus";
                     return;
                 }
-                let parts = [];
+                let parts = []; // 'let' because it's an accumulating array
                 for (const key in accessory.bonuses) {
                     const value = accessory.bonuses[key];
                     if (
@@ -1357,7 +1496,7 @@
                 if (currentEnemy) {
                     enemyNameEl.innerHTML = currentEnemy.isElite
                         ? `<span class="elite-enemy">${currentEnemy.name}</span>`
-                        : `<strong>${currentEnemy.name}</strong>`;
+                        : `<strong>${currentEnemy.name}</strong>`; // innerHTML for styling
                     enemyHpEl.textContent = currentEnemy.currentHp;
                     enemyAreaEl.style.display = "block";
                 } else {
@@ -1420,7 +1559,7 @@
                 const rarityInfo = itemStatsByRarity[rarity];
                 let bonusRange =
                     itemType === "weapon" ? rarityInfo.weaponBonus : rarityInfo.armorBonus;
-                if (!bonusRange) bonusRange = [1, 1];
+                if (!bonusRange) bonusRange = [1, 1]; // Fallback
                 const bonus =
                     bonusRange[0] + Math.floor(Math.random() * (bonusRange[1] - bonusRange[0] + 1));
                 const baseName =
@@ -1442,7 +1581,7 @@
             }
 
             function tryEquipItem(newItem) {
-                let equipped = false;
+                let equipped = false; // 'let' as it's conditionally changed
                 newItem.bonus = newItem.bonus || 0;
                 newItem.attackBonus = newItem.attackBonus || 0;
                 newItem.defenseBonus = newItem.defenseBonus || 0;
@@ -1509,9 +1648,10 @@
                 );
                 const houseLootRoll = Math.random();
                 let itemFoundInHouse = false;
-                let itemRarity;
-                let item;
+                let itemRarity; // 'let' because it's conditionally assigned
                 const itemType = Math.random() < 0.5 ? "weapon" : "armor";
+
+                // Determine item rarity based on player level
                 if (player.level < 5) {
                     if (houseLootRoll < 0.05) itemRarity = "Uncommon";
                     else if (houseLootRoll < 0.3) itemRarity = "Common";
@@ -1547,7 +1687,7 @@
                 }
 
                 if (itemRarity) {
-                    item = generateItem(itemType, [itemRarity]);
+                    const item = generateItem(itemType, [itemRarity]);
                     let itemBonusText = "";
                     if (item.type === "weapon") {
                         let effectiveAtk = (item.attackBonus || 0) + item.bonus;
@@ -1574,20 +1714,27 @@
                     "You find a makeshift forge! A friendly blacksmith offers to temper your gear.",
                 );
                 const upgradeChoice = Math.random();
-                const isRareUpgrade = Math.random() < 0.2;
-                const upgradeAmount = isRareUpgrade
-                    ? Math.random() < 0.5
-                        ? 3
-                        : 4
-                    : Math.random() < 0.7
-                      ? 1
-                      : 2;
+                const isRareUpgrade = Math.random() < GAME_CONSTANTS.BLACKSMITH_RARE_UPGRADE_CHANCE;
+
+                let upgradeAmount;
+                if (isRareUpgrade) {
+                    upgradeAmount =
+                        Math.random() < GAME_CONSTANTS.BLACKSMITH_UPGRADE_COMMON_ROLL_THRESHOLD
+                            ? GAME_CONSTANTS.BLACKSMITH_UPGRADE_VALUES.RARE[0]
+                            : GAME_CONSTANTS.BLACKSMITH_UPGRADE_VALUES.RARE[1];
+                } else {
+                    upgradeAmount =
+                        Math.random() < GAME_CONSTANTS.BLACKSMITH_UPGRADE_RARE_ROLL_THRESHOLD
+                            ? GAME_CONSTANTS.BLACKSMITH_UPGRADE_VALUES.COMMON[0]
+                            : GAME_CONSTANTS.BLACKSMITH_UPGRADE_VALUES.COMMON[1];
+                }
 
                 if (upgradeChoice < 0.33) {
                     // Weapon
                     let enhancedStat = "main bonus";
                     if (
-                        player.weapon.name === "Old Stick" &&
+                        player.weapon.name ===
+                            GAME_CONSTANTS.INITIAL_PLAYER_STATS.DEFAULT_WEAPON.name &&
                         player.weapon.bonus === 0 &&
                         player.weapon.attackBonus === 0 &&
                         player.weapon.defenseBonus === 0
@@ -1644,7 +1791,7 @@
                             ];
 
                             if (percentageBonusKeys.includes(chosenBonusKey)) {
-                                actualUpgradeValue = upgradeAmount * 0.01;
+                                actualUpgradeValue = upgradeAmount * 0.01; // Scale percentage upgrades differently
                                 player.accessory.bonuses[chosenBonusKey] = parseFloat(
                                     (currentBonusValue + actualUpgradeValue).toFixed(4),
                                 );
@@ -1679,7 +1826,13 @@
 
             function findPotionCrate() {
                 addLog("You stumble upon an abandoned crate!");
-                const potionsFound = Math.floor(Math.random() * 4) + 3;
+                const potionsFound =
+                    GAME_CONSTANTS.POTION_CRATE_MIN_FOUND +
+                    Math.floor(
+                        Math.random() *
+                            (GAME_CONSTANTS.POTION_CRATE_MAX_FOUND_EXCLUSIVE -
+                                GAME_CONSTANTS.POTION_CRATE_MIN_FOUND),
+                    );
                 const potionsCanTake = player.maxPotions - player.potions;
                 const potionsTaken = Math.min(potionsFound, potionsCanTake);
                 if (potionsTaken > 0) {
@@ -1693,11 +1846,12 @@
                 updatePlayerStatsUI();
                 toggleCombatUI(false);
             }
+
             function encounterLostCollector() {
                 const collectorTemplate = enemies.find(e => e.name === "Lost Collector");
                 currentEnemy = {
                     ...collectorTemplate,
-                    currentHp: Math.floor(collectorTemplate.baseHp + player.level * 12),
+                    currentHp: Math.floor(collectorTemplate.baseHp + player.level * 12), // Specific scaling for collector
                     attack: Math.floor(collectorTemplate.baseAttack + player.level * 0.5),
                     defense: Math.floor(collectorTemplate.baseDefense + player.level * 2),
                     isElite: false,
@@ -1706,30 +1860,30 @@
                 updateEnemyStatsUI();
                 toggleCombatUI(true);
             }
+
             function showPurchaseConfirmation(offer) {
                 pendingPurchaseAction = offer.action;
                 const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = offer.description;
-                const cleanDescription = tempDiv.textContent || tempDiv.innerText || "";
-                confirmationMessageEl.innerHTML = `Purchase ${cleanDescription} for ${offer.cost.toLocaleString()} Gold?`;
+                tempDiv.innerHTML = offer.description; // To strip HTML for text content if needed, though here description is rich
+                confirmationMessageEl.innerHTML = `Purchase ${offer.description} for ${offer.cost.toLocaleString()} Gold?`; // Using innerHTML as description can be rich
                 purchaseConfirmationModalEl.style.display = "flex";
             }
+
             function hidePurchaseConfirmation() {
                 purchaseConfirmationModalEl.style.display = "none";
                 pendingPurchaseAction = null;
             }
 
             confirmPurchaseButtonEl.addEventListener("click", () => {
-                console.log("Modal Confirm button clicked. Pending action:", pendingPurchaseAction);
                 if (pendingPurchaseAction) {
                     pendingPurchaseAction();
                     updatePlayerStatsUI();
-                    updateMerchantUI(); // Crucial to update merchant UI after a purchase
+                    updateMerchantUI();
                 }
                 hidePurchaseConfirmation();
             });
+
             cancelPurchaseButtonEl.addEventListener("click", () => {
-                console.log("Modal Cancel button clicked.");
                 hidePurchaseConfirmation();
                 addLog("Purchase cancelled.");
             });
@@ -1748,19 +1902,25 @@
                     }
                     return Math.max(1, effectiveCost);
                 }
+
                 let baseCostUnit;
-                // Use item.cost if provided (for potions/xp_potions where it's pre-calculated for the offer)
-                if (item.type === "potion")
-                    baseCostUnit =
-                        (item.cost || Math.floor(10 + player.level * 1.2 + player.maxHp * 0.035)) /
-                        8;
-                else if (item.type === "xp_potion")
+                if (item.type === "potion") {
                     baseCostUnit =
                         (item.cost ||
-                            Math.floor(player.xpToNextLevel * (0.12 + player.level * 0.0035))) / 20;
-                else
+                            GAME_CONSTANTS.MERCHANT_POTION_COST.BASE +
+                                player.level * GAME_CONSTANTS.MERCHANT_POTION_COST.PER_LEVEL +
+                                player.maxHp * GAME_CONSTANTS.MERCHANT_POTION_COST.PER_MAX_HP) / 8; // Arbitrary division based on original structure
+                } else if (item.type === "xp_potion") {
+                    baseCostUnit =
+                        (item.cost ||
+                            player.xpToNextLevel *
+                                (GAME_CONSTANTS.MERCHANT_XP_POTION.BASE_COST_FACTOR +
+                                    player.level *
+                                        GAME_CONSTANTS.MERCHANT_XP_POTION.LEVEL_COST_FACTOR)) / 20; // Arbitrary division
+                } else {
                     baseCostUnit =
                         (item.bonus || 0) + (item.attackBonus || 0) + (item.defenseBonus || 0);
+                }
 
                 if (baseCostUnit <= 0 && (item.type === "weapon" || item.type === "armor"))
                     baseCostUnit = 1;
@@ -1779,7 +1939,7 @@
                 };
                 let cost = baseCostUnit * (rarityCostFactors[item.rarity] || 8);
                 if (item.type !== "potion" && item.type !== "xp_potion") {
-                    cost = cost * (1 + player.level * 0.008);
+                    cost = cost * (1 + player.level * 0.008); // General level scaling for gear
                 }
                 if (
                     player.accessory &&
@@ -1795,17 +1955,17 @@
             }
 
             function generateMerchantOffers() {
-                console.log("Generating merchant offers...");
                 currentMerchantOffers = [];
                 const offerTypesPool = ["potion", "gear", "xp_potion", "accessory"];
-                let availableOfferTypes = [...offerTypesPool];
+                let availableOfferTypes = [...offerTypesPool]; // 'let' as it's modified
+
                 for (let i = 0; i < 2; i++) {
                     if (availableOfferTypes.length === 0) {
                         currentMerchantOffers[i] = null;
-                        console.log(`Offer slot ${i + 1}: No types left.`);
                         continue;
                     }
-                    let offerType;
+
+                    let offerType; // 'let'
                     let accessoryOfferAttempted = currentMerchantOffers.some(
                         o => o && o.type === "accessory",
                     );
@@ -1829,9 +1989,6 @@
                             offerType = "accessory";
                         } else {
                             currentMerchantOffers[i] = null;
-                            console.log(
-                                `Offer slot ${i + 1}: No valid type found after filtering.`,
-                            );
                             continue;
                         }
                     }
@@ -1839,7 +1996,6 @@
                     if (typeIndex > -1) {
                         availableOfferTypes.splice(typeIndex, 1);
                     }
-                    console.log(`Offer slot ${i + 1}: Selected type ${offerType}`);
 
                     let offer = {
                         type: offerType,
@@ -1847,11 +2003,16 @@
                         cost: 0,
                         id: i,
                         purchased: false,
-                    };
+                    }; // 'let' as properties are set
+
                     if (offerType === "potion") {
                         offer.item = {
                             type: "potion",
-                            cost: Math.floor(10 + player.level * 1.2 + player.maxHp * 0.035),
+                            cost: Math.floor(
+                                GAME_CONSTANTS.MERCHANT_POTION_COST.BASE +
+                                    player.level * GAME_CONSTANTS.MERCHANT_POTION_COST.PER_LEVEL +
+                                    player.maxHp * GAME_CONSTANTS.MERCHANT_POTION_COST.PER_MAX_HP,
+                            ),
                         };
                         offer.cost = calculateMerchantItemCost(offer.item);
                         offer.description = `Health Potion`;
@@ -1867,13 +2028,16 @@
                             }
                         };
                     } else if (offerType === "gear") {
-                        let gearRarity;
+                        let gearRarity; // 'let'
                         const r = Math.random();
+                        // Rarity determination logic (can be further constant-ized if desired for thresholds)
                         if (player.level <= 2) {
                             gearRarity = r < 0.8 ? "Common" : "Uncommon";
                         } else if (player.level <= 4) {
                             gearRarity = r < 0.5 ? "Common" : r < 0.9 ? "Uncommon" : "Rare";
-                        } else if (player.level <= 7) {
+                        }
+                        // ... (rest of rarity logic)
+                        else if (player.level <= 7) {
                             gearRarity = r < 0.5 ? "Uncommon" : r < 0.9 ? "Rare" : "Epic";
                         } else if (player.level <= 11) {
                             gearRarity = r < 0.5 ? "Rare" : r < 0.9 ? "Epic" : "Legendary";
@@ -1900,6 +2064,7 @@
                             else if (r < 0.7) gearRarity = "Immortal";
                             else gearRarity = "Eternal";
                         }
+
                         const itemType = Math.random() < 0.5 ? "weapon" : "armor";
                         offer.item = generateItem(itemType, [gearRarity]);
                         offer.cost = calculateMerchantItemCost(offer.item);
@@ -1918,11 +2083,19 @@
                     } else if (offerType === "xp_potion") {
                         offer.item = {
                             type: "xp_potion",
-                            cost: Math.floor(player.xpToNextLevel * (0.12 + player.level * 0.0035)),
+                            cost: Math.floor(
+                                player.xpToNextLevel *
+                                    (GAME_CONSTANTS.MERCHANT_XP_POTION.BASE_COST_FACTOR +
+                                        player.level *
+                                            GAME_CONSTANTS.MERCHANT_XP_POTION.LEVEL_COST_FACTOR),
+                            ),
                         };
                         offer.cost = calculateMerchantItemCost(offer.item);
                         offer.xpAmount = Math.floor(
-                            player.xpToNextLevel * (Math.random() * 0.25 + 0.6),
+                            player.xpToNextLevel *
+                                (Math.random() *
+                                    GAME_CONSTANTS.MERCHANT_XP_POTION.XP_RANDOM_ADDITIONAL_PERCENT +
+                                    GAME_CONSTANTS.MERCHANT_XP_POTION.XP_MIN_PERCENT_OF_NEXT_LEVEL),
                         );
                         offer.description = `Flask of Wisdom (+${offer.xpAmount.toLocaleString()} XP)`;
                         offer.purchaseMessage = `You drank the Flask of Wisdom and gained ${offer.xpAmount.toLocaleString()} XP!`;
@@ -1935,28 +2108,30 @@
                         };
                     } else if (offerType === "accessory") {
                         let availableAcc = accessories.filter(acc => {
+                            // 'let'
                             if (player.level < 5) return ["Common"].includes(acc.rarity);
                             if (player.level < 10)
                                 return ["Common", "Uncommon"].includes(acc.rarity);
                             if (player.level < 18) return ["Uncommon", "Rare"].includes(acc.rarity);
                             if (player.level < 25) return ["Rare", "Epic"].includes(acc.rarity);
-                            return ["Epic"].includes(acc.rarity);
+                            return ["Epic"].includes(acc.rarity); // Default for higher levels
                         });
                         if (availableAcc.length === 0)
-                            availableAcc = accessories.filter(acc => acc.rarity === "Common");
+                            availableAcc = accessories.filter(acc => acc.rarity === "Common"); // Fallback
                         if (availableAcc.length === 0) {
                             currentMerchantOffers[i] = null;
-                            console.log(`Offer slot ${i + 1}: No suitable accessory found.`);
                             continue;
                         }
+
                         const selectedAccessoryTemplate =
                             availableAcc[Math.floor(Math.random() * availableAcc.length)];
-                        offer.item = JSON.parse(JSON.stringify(selectedAccessoryTemplate));
+                        offer.item = JSON.parse(JSON.stringify(selectedAccessoryTemplate)); // Deep copy
                         offer.cost = calculateMerchantItemCost(offer.item);
                         offer.description = `<span class="rarity-${offer.item.rarity}">${offer.item.name}</span> (${offer.item.description})`;
                         offer.purchaseMessage = `You bought the <span class="rarity-${offer.item.rarity}">${offer.item.name}</span> for ${offer.cost.toLocaleString()} Gold.`;
                         offer.action = () => {
                             player.gold -= offer.cost;
+                            // Adjust HP if old accessory had flat HP
                             if (
                                 player.accessory &&
                                 player.accessory.bonuses &&
@@ -1969,9 +2144,12 @@
                                 player.currentHp = Math.min(player.currentHp, player.maxHp);
                                 if (player.currentHp <= 0) player.currentHp = 1;
                             }
-                            player.accessory = JSON.parse(JSON.stringify(offer.item));
+                            player.accessory = JSON.parse(JSON.stringify(offer.item)); // Equip new one
+                            // Adjust HP if new accessory has flat HP
                             if (player.accessory.bonuses && player.accessory.bonuses.flatHp) {
                                 player.maxHp += player.accessory.bonuses.flatHp;
+                                // player.currentHp += player.accessory.bonuses.flatHp; // Optionally heal the amount added
+                                player.currentHp = Math.min(player.currentHp, player.maxHp); // Ensure not over max
                             }
                             addLog(offer.purchaseMessage);
                             addLog(
@@ -1981,24 +2159,20 @@
                         };
                     }
                     currentMerchantOffers[i] = offer.action ? offer : null;
-                    console.log(
-                        `Offer ${i + 1} generated:`,
-                        currentMerchantOffers[i] ? currentMerchantOffers[i].description : "NULL",
-                    );
                 }
                 updateMerchantUI();
             }
 
             function updateMerchantUI() {
-                console.log("Updating merchant UI. Offers:", JSON.stringify(currentMerchantOffers));
                 if (!inMerchantEncounter) return;
                 for (let i = 0; i < 2; i++) {
                     const offer = currentMerchantOffers[i];
                     const offerEl = i === 0 ? merchantOffer1El : merchantOffer2El;
                     const buttonEl = i === 0 ? buyOffer1Button : buyOffer2Button;
+
                     if (offer && offer.type) {
-                        offerEl.innerHTML = offer.description;
-                        buttonEl.innerHTML = `Buy (Cost: ${offer.cost.toLocaleString()} G)`;
+                        offerEl.innerHTML = offer.description; // innerHTML for rich text
+                        buttonEl.innerHTML = `Buy (Cost: ${offer.cost.toLocaleString()} G)`; // innerHTML is fine for buttons
                         buttonEl.disabled = offer.purchased || player.gold < offer.cost;
                         if (offer.type === "potion" && player.potions >= player.maxPotions) {
                             buttonEl.disabled = true;
@@ -2009,9 +2183,6 @@
                         }
                         offerEl.style.display = "block";
                         buttonEl.style.display = "block";
-                        console.log(
-                            `Offer ${i + 1} UI updated. Button disabled: ${buttonEl.disabled}`,
-                        );
                     } else {
                         offerEl.innerHTML = "--- Nothing on offer ---";
                         buttonEl.innerHTML = "---";
@@ -2020,43 +2191,44 @@
                             i === 0 &&
                             (!currentMerchantOffers[1] || !currentMerchantOffers[1].type)
                         ) {
+                            // If offer 1 is null and offer 2 is also null/no type
                             merchantOffer2El.style.display = "none";
                             buyOffer2Button.style.display = "none";
                         } else if (i === 1) {
+                            // If offer 2 specifically is null
                             offerEl.style.display = "none";
                             buttonEl.style.display = "none";
                         }
-                        console.log(
-                            `Offer ${i + 1} UI set to 'Nothing on offer'. Button disabled: ${buttonEl.disabled}`,
-                        );
                     }
                 }
                 if (currentMerchantOffers.filter(o => o && o.type).length === 0) {
+                    // If both offers are effectively null
                     merchantOffer1El.innerHTML = "The merchant seems to be out of stock.";
                     buyOffer1Button.style.display = "none";
                     merchantOffer2El.style.display = "none";
                     buyOffer2Button.style.display = "none";
-                    console.log("Merchant out of stock.");
                 }
             }
 
             function encounterMerchant() {
-                console.log("Encountering merchant...");
                 addLog("You encounter a peculiar Wandering Merchant!");
                 toggleMerchantUI(true);
                 generateMerchantOffers();
             }
 
             function spawnEnemy() {
-                let enemyTemplate;
-                let enemyPool = [];
-                let playerLevelAdvantage = 0;
-                let isElite = false;
-                const firstEncounterOverride = firstEncounter;
+                let enemyTemplate; // 'let'
+                let enemyPool = []; // 'let'
+                let playerLevelAdvantage = 0; // 'let'
+                let isElite = false; // 'let'
+                const G_CONST = GAME_CONSTANTS; // Shorter alias
+
+                const firstEncounterOverride = firstEncounter; // Store current state
                 if (firstEncounter) {
                     firstEncounter = false;
                     enemyTemplate = enemies.find(e => e.name === "Goblin Grunt");
                 } else {
+                    // Player level based enemy pool selection (can be made more data-driven)
                     if (player.level <= 2) {
                         enemyPool = enemies.filter(
                             e =>
@@ -2073,7 +2245,9 @@
                                 !e.isSpecial &&
                                 !e.isFinalBoss,
                         );
-                    } else if (player.level <= 7) {
+                    }
+                    // ... (rest of pooling logic)
+                    else if (player.level <= 7) {
                         enemyPool = enemies.filter(
                             e =>
                                 ["Orc Scout", "Dire Wolf", "Cave Spider", "Skeleton"].includes(
@@ -2191,6 +2365,7 @@
                             ];
                         }
                     }
+
                     if (enemyPool.length === 0) {
                         enemyPool = [
                             enemies.find(
@@ -2198,17 +2373,18 @@
                             ) || enemies.find(e => !e.isSpecial && !e.isFinalBoss),
                         ];
                     }
-                    if (enemyPool.length === 0) enemyPool = [enemies[0]];
+                    if (enemyPool.length === 0) enemyPool = [enemies[0]]; // Absolute fallback
                     enemyTemplate = enemyPool[Math.floor(Math.random() * enemyPool.length)];
                 }
 
-                const enemyTemplateForScaling = enemies.find(e => e.name === enemyTemplate.name);
+                const enemyTemplateForScaling = enemies.find(e => e.name === enemyTemplate.name); // Ensure we use the base template for scaling
                 const originalEnemyName = enemyTemplateForScaling.name;
+
                 if (
-                    player.level >= 15 &&
+                    player.level >= G_CONST.ELITE_MODIFIERS.SPAWN_MIN_PLAYER_LEVEL &&
                     !enemyTemplateForScaling.isSpecial &&
                     !enemyTemplateForScaling.isFinalBoss &&
-                    Math.random() < 0.15
+                    Math.random() < G_CONST.ELITE_MODIFIERS.SPAWN_CHANCE
                 ) {
                     isElite = true;
                 }
@@ -2225,48 +2401,66 @@
                     : 0;
                 let currentLootTable = enemyTemplateForScaling.lootTable
                     ? JSON.parse(JSON.stringify(enemyTemplateForScaling.lootTable))
-                    : [];
+                    : []; // Deep copy
 
                 if (isElite) {
-                    baseHp = Math.floor(baseHp * 1.75);
-                    baseAttack = Math.floor(baseAttack * 1.4);
-                    baseDefense = Math.floor(baseDefense * 1.4);
-                    xpYield = Math.floor(xpYield * 2.5);
-                    goldDropMin = Math.floor(goldDropMin * 2);
-                    goldDropMax = Math.floor(goldDropMax * 2);
+                    baseHp = Math.floor(baseHp * G_CONST.ELITE_MODIFIERS.HP_MULTIPLIER);
+                    baseAttack = Math.floor(baseAttack * G_CONST.ELITE_MODIFIERS.ATK_MULTIPLIER);
+                    baseDefense = Math.floor(baseDefense * G_CONST.ELITE_MODIFIERS.DEF_MULTIPLIER);
+                    xpYield = Math.floor(xpYield * G_CONST.ELITE_MODIFIERS.XP_MULTIPLIER);
+                    goldDropMin = Math.floor(goldDropMin * G_CONST.ELITE_MODIFIERS.GOLD_MULTIPLIER);
+                    goldDropMax = Math.floor(goldDropMax * G_CONST.ELITE_MODIFIERS.GOLD_MULTIPLIER);
                     currentLootTable = currentLootTable.map(loot => ({
                         ...loot,
-                        chance: Math.min(1, loot.chance * 1.5),
+                        chance: Math.min(
+                            1,
+                            loot.chance * G_CONST.ELITE_MODIFIERS.LOOT_CHANCE_MULTIPLIER,
+                        ),
                     }));
                 }
+
+                const enemyIndex = enemies.findIndex(e => e.name === originalEnemyName);
                 const enemyLevelTier = Math.max(
                     1,
-                    Math.floor(enemies.findIndex(e => e.name === originalEnemyName) / 4) + 1,
+                    Math.floor(enemyIndex / G_CONST.ENEMY_SCALING.LEVEL_TIER_DIVISOR) + 1,
                 );
                 playerLevelAdvantage = Math.max(0, player.level - enemyLevelTier);
+
                 currentEnemy = {
-                    ...enemyTemplateForScaling,
+                    ...enemyTemplateForScaling, // Spread base template first
                     name: isElite ? "Elite " + originalEnemyName : originalEnemyName,
                     isElite: isElite,
-                    baseHp: baseHp,
+                    baseHp: baseHp, // Overwrite with potentially elite-modified base
                     baseAttack: baseAttack,
                     baseDefense: baseDefense,
                     currentHp: Math.floor(
-                        baseHp + playerLevelAdvantage * (baseHp * 0.055) + player.level * 0.65,
+                        baseHp +
+                            playerLevelAdvantage *
+                                (baseHp * G_CONST.ENEMY_SCALING.HP_PER_LEVEL_ADVANTAGE_FACTOR) +
+                            player.level * G_CONST.ENEMY_SCALING.HP_FLAT_PER_PLAYER_LEVEL,
                     ),
                     attack: Math.floor(
                         baseAttack +
-                            playerLevelAdvantage * (baseAttack * 0.055) +
-                            Math.floor(player.level * 0.35),
+                            playerLevelAdvantage *
+                                (baseAttack *
+                                    G_CONST.ENEMY_SCALING.ATK_PER_LEVEL_ADVANTAGE_FACTOR) +
+                            Math.floor(
+                                player.level * G_CONST.ENEMY_SCALING.ATK_FLAT_PER_PLAYER_LEVEL,
+                            ),
                     ),
                     defense: Math.floor(
                         baseDefense +
-                            playerLevelAdvantage * (baseDefense * 0.035) +
-                            Math.floor(player.level * 0.18),
+                            playerLevelAdvantage *
+                                (baseDefense *
+                                    G_CONST.ENEMY_SCALING.DEF_PER_LEVEL_ADVANTAGE_FACTOR) +
+                            Math.floor(
+                                player.level * G_CONST.ENEMY_SCALING.DEF_FLAT_PER_PLAYER_LEVEL,
+                            ),
                     ),
-                    xpYield: xpYield,
-                    goldDropRange: [goldDropMin, goldDropMax],
-                    lootTable: currentLootTable,
+                    xpYield: xpYield, // Use elite-modified if applicable
+                    goldDropRange: [goldDropMin, goldDropMax], // Use elite-modified if applicable
+                    lootTable: currentLootTable, // Use elite-modified if applicable
+                    // Preserve specific flags from original template
                     ignoresDefense: enemyTemplateForScaling.ignoresDefense || false,
                     timeWarpHealChance: enemyTemplateForScaling.timeWarpHealChance || 0,
                     timeWarpAttackChance: enemyTemplateForScaling.timeWarpAttackChance || 0,
@@ -2274,9 +2468,11 @@
                     isSpecial: enemyTemplateForScaling.isSpecial || false,
                     isFinalBoss: enemyTemplateForScaling.isFinalBoss || false,
                 };
+                // Ensure scaled stats are not less than base (especially after elite modification of base)
                 currentEnemy.currentHp = Math.max(baseHp, currentEnemy.currentHp);
                 currentEnemy.attack = Math.max(baseAttack, currentEnemy.attack);
                 currentEnemy.defense = Math.max(baseDefense, currentEnemy.defense);
+
                 addLog(
                     `A wild ${currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`} (Lvl ~${player.level}) appears!${currentEnemy.isElite ? " It radiates a menacing aura!" : ""}`,
                 );
@@ -2286,25 +2482,22 @@
 
             exploreButton.addEventListener("click", () => {
                 addLog("You venture deeper into the dungeon...");
-                const rand = Math.random(); // Generates a number between 0 and 1
+                const rand = Math.random();
+                const T = GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS;
 
                 if (firstEncounter) {
-                    spawnEnemy(); // This remains the same for the very first encounter
+                    // firstEncounter is a global 'let'
+                    spawnEnemy();
                     return;
                 }
 
-                // New probabilities:
-                if (rand < 0.02) {
-                    // 2% chance for Lost Collector
+                if (rand < T.LOST_COLLECTOR) {
                     encounterLostCollector();
-                } else if (rand < 0.04) {
-                    // 2% chance for Potion Crate (cumulative: 0.02 + 0.02 = 0.04)
+                } else if (rand < T.POTION_CRATE) {
                     findPotionCrate();
-                } else if (rand < 0.08) {
-                    // 4% chance for Merchant (cumulative: 0.04 + 0.04 = 0.08)
+                } else if (rand < T.MERCHANT) {
                     encounterMerchant();
-                } else if (rand < 0.125) {
-                    // 4.5% chance for Stray Potion (cumulative: 0.08 + 0.045 = 0.125)
+                } else if (rand < T.STRAY_POTION) {
                     if (player.potions < player.maxPotions) {
                         player.potions++;
                         addLog("You found a stray Healing Potion!");
@@ -2312,15 +2505,13 @@
                     } else {
                         addLog("You spot a potion, but can't carry more.");
                     }
-                    toggleCombatUI(false);
-                } else if (rand < 0.175) {
-                    // 5% chance for Blacksmith (cumulative: 0.125 + 0.05 = 0.175)
+                    toggleCombatUI(false); // No combat for stray potion
+                } else if (rand < T.BLACKSMITH) {
                     findBlacksmith();
-                } else if (rand < 0.25) {
-                    // 7.5% chance for Rest House (cumulative: 0.175 + 0.075 = 0.25)
+                } else if (rand < T.REST_HOUSE) {
                     findRestHouse();
                 } else {
-                    // 75% chance for Spawn Enemy (remaining: 1.00 - 0.25 = 0.75)
+                    // Default: Spawn Enemy
                     spawnEnemy();
                 }
             });
@@ -2328,23 +2519,27 @@
             attackButton.addEventListener("click", () => {
                 if (!currentEnemy || !inCombat) return;
                 player.isDefending = false;
+                const G_CONST_PLAYER = GAME_CONSTANTS.PLAYER_BASE_CRIT_CHANCE; // Alias for readability
+
                 let playerEffectiveAttack =
                     player.baseAttack +
                     player.weapon.bonus +
                     (player.weapon.attackBonus || 0) +
                     ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
                 let playerDamage = Math.max(1, playerEffectiveAttack - currentEnemy.defense);
+
                 let critChance =
-                    0.05 +
-                    player.level * 0.003 +
+                    G_CONST_PLAYER +
+                    player.level * GAME_CONSTANTS.PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER +
                     ((player.accessory && player.accessory.bonuses.critChance) || 0);
                 const enemyDisplayName = currentEnemy.isElite
                     ? `<span class="elite-enemy">${currentEnemy.name}</span>`
                     : `<strong>${currentEnemy.name}</strong>`;
+
                 if (Math.random() < critChance) {
                     let critMultiplier =
-                        1.75 +
-                        player.level * 0.005 +
+                        GAME_CONSTANTS.PLAYER_BASE_CRIT_DAMAGE_MULTIPLIER +
+                        player.level * GAME_CONSTANTS.PLAYER_CRIT_DAMAGE_LEVEL_MULTIPLIER +
                         ((player.accessory && player.accessory.bonuses.critDamage) || 0);
                     playerDamage = Math.floor(playerDamage * critMultiplier);
                     addLog(
@@ -2357,8 +2552,11 @@
                 }
                 currentEnemy.currentHp = Math.max(0, currentEnemy.currentHp - playerDamage);
                 updateEnemyStatsUI();
-                if (currentEnemy.currentHp <= 0) handleEnemyDefeat();
-                else enemyTurn();
+                if (currentEnemy.currentHp <= 0) {
+                    handleEnemyDefeat();
+                } else {
+                    enemyTurn();
+                }
             });
 
             defendButton.addEventListener("click", () => {
@@ -2371,7 +2569,11 @@
             potionButton.addEventListener("click", () => {
                 if (player.potions > 0 && player.currentHp < player.maxHp && inCombat) {
                     player.potions--;
-                    let healAmount = Math.floor(player.maxHp * (0.45 + player.level * 0.001));
+                    let healAmount = Math.floor(
+                        player.maxHp *
+                            (GAME_CONSTANTS.POTION_HEAL_BASE_PERCENT +
+                                player.level * GAME_CONSTANTS.POTION_HEAL_LEVEL_MULTIPLIER),
+                    );
                     if (
                         player.accessory &&
                         player.accessory.bonuses &&
@@ -2383,13 +2585,17 @@
                     }
                     player.currentHp = Math.min(player.maxHp, player.currentHp + healAmount);
                     addLog(`You drink a potion and restore <strong>${healAmount}</strong> HP.`);
-                    updatePlayerStatsUI();
-                } else if (player.potions <= 0) addLog("No potions left!");
-                else if (player.currentHp === player.maxHp) addLog("HP is already full!");
+                    updatePlayerStatsUI(); // potionButton state might change
+                } else if (player.potions <= 0) {
+                    addLog("No potions left!");
+                } else if (player.currentHp === player.maxHp) {
+                    addLog("HP is already full!");
+                }
             });
 
             function enemyTurn() {
                 if (!currentEnemy || currentEnemy.currentHp <= 0) return;
+
                 let effectivePlayerDefense =
                     (player.baseDefense +
                         player.armor.bonus +
@@ -2408,12 +2614,19 @@
                 } else {
                     enemyDamage = Math.max(1, currentEnemy.attack - effectivePlayerDefense);
                 }
+
+                const critRoll = Math.random();
+                const enemyCritChance =
+                    GAME_CONSTANTS.ENEMY_BASE_CRIT_CHANCE +
+                    player.level * GAME_CONSTANTS.ENEMY_CRIT_CHANCE_LEVEL_MULTIPLIER; // Enemy crit might scale with player level or enemy tier. Here, using player level as per original implication.
                 if (
                     currentEnemy.attack >
                         (currentEnemy.ignoresDefense ? -1 : effectivePlayerDefense) &&
-                    Math.random() < 0.12 + player.level * 0.0005
+                    critRoll < enemyCritChance
                 ) {
-                    const critMultiplier = 1.5 + player.level * 0.002;
+                    const critMultiplier =
+                        GAME_CONSTANTS.ENEMY_BASE_CRIT_DAMAGE_MULTIPLIER +
+                        player.level * GAME_CONSTANTS.ENEMY_CRIT_DAMAGE_LEVEL_MULTIPLIER;
                     enemyDamage = Math.floor(enemyDamage * critMultiplier);
                     addLog(
                         `${messagePrefix} lands a <strong style="color:#ff4500;">critical blow</strong> for <strong>${enemyDamage}</strong> damage!`,
@@ -2429,38 +2642,37 @@
                         );
                     }
                 }
+
                 if (player.isDefending && !currentEnemy.ignoresDefense) {
                     addLog("Your defense reduced the damage!");
                 }
-                player.isDefending = false;
+                player.isDefending = false; // Reset defense stance
                 player.currentHp = Math.max(0, player.currentHp - enemyDamage);
                 updatePlayerStatsUI();
+
                 if (player.currentHp <= 0) {
                     handlePlayerDefeat();
-                    return;
+                    return; // Stop further enemy actions if player is defeated
                 }
 
+                // Special enemy abilities after attack
                 const actualEnemyNameForAbilities = currentEnemy.isElite
                     ? currentEnemy.name.substring(6)
-                    : currentEnemy.name;
+                    : currentEnemy.name; // Get base name if elite
                 const enemyTemplateOriginal = enemies.find(
                     e => e.name === actualEnemyNameForAbilities,
-                );
+                ); // Find original template for abilities
+
                 if (enemyTemplateOriginal) {
-                    const enemyLevelTier = Math.max(
-                        1,
-                        Math.floor(
-                            enemies.findIndex(e => e.name === actualEnemyNameForAbilities) / 4,
-                        ) + 1,
-                    );
-                    const playerLevelAdvantage = Math.max(0, player.level - enemyLevelTier);
+                    // Check if template found
                     if (actualEnemyNameForAbilities === "Chronomancer Adept") {
                         if (Math.random() < (currentEnemy.timeWarpHealChance || 0)) {
-                            const healAmount = Math.floor(enemyTemplateOriginal.baseHp * 0.15);
+                            // Use currentEnemy's potentially scaled chance
+                            const healAmount = Math.floor(enemyTemplateOriginal.baseHp * 0.15); // Heal based on original template's base HP
                             currentEnemy.currentHp = Math.min(
                                 currentEnemy.baseHp,
                                 currentEnemy.currentHp + healAmount,
-                            );
+                            ); // Cap heal at its own base (potentially elite)
                             addLog(
                                 `The ${enemyDisplayName} warps time, restoring <strong style="color:lightgreen;">${healAmount}</strong> HP!`,
                             );
@@ -2482,6 +2694,7 @@
                             updateEnemyStatsUI();
                         }
                     }
+                    // Chronomancer extra attack
                     if (
                         player.currentHp > 0 &&
                         actualEnemyNameForAbilities === "Chronomancer Adept" &&
@@ -2490,11 +2703,13 @@
                         addLog(`The ${enemyDisplayName} bends time and attacks again!`);
                         let extraEnemyDamage;
                         let extraMessagePrefix = `${enemyDisplayName}'s extra attack`;
+                        // Recalculate defense for this extra attack as player is no longer defending
                         let extraEffectivePlayerDefense =
                             player.baseDefense +
                             player.armor.bonus +
                             (player.weapon.defenseBonus || 0) +
                             ((player.accessory && player.accessory.bonuses.flatDefense) || 0);
+
                         if (currentEnemy.ignoresDefense) {
                             extraEnemyDamage = currentEnemy.attack;
                             extraMessagePrefix +=
@@ -2505,12 +2720,16 @@
                                 currentEnemy.attack - extraEffectivePlayerDefense,
                             );
                         }
+
                         if (
                             currentEnemy.attack >
                                 (currentEnemy.ignoresDefense ? -1 : extraEffectivePlayerDefense) &&
-                            Math.random() < 0.12 + player.level * 0.0005
+                            Math.random() < enemyCritChance
                         ) {
-                            const critMultiplier = 1.5 + player.level * 0.002;
+                            // Re-use previous crit chance
+                            const critMultiplier =
+                                GAME_CONSTANTS.ENEMY_BASE_CRIT_DAMAGE_MULTIPLIER +
+                                player.level * GAME_CONSTANTS.ENEMY_CRIT_DAMAGE_LEVEL_MULTIPLIER;
                             extraEnemyDamage = Math.floor(extraEnemyDamage * critMultiplier);
                             addLog(
                                 `${extraMessagePrefix} lands a <strong style="color:#ff4500;">critical blow</strong> for <strong>${extraEnemyDamage}</strong> damage!`,
@@ -2530,15 +2749,16 @@
             }
 
             function handleRegularLootDrop(defeatedEnemyNameForLogDisplay) {
-                const enemyDataForLoot = currentEnemy;
+                const enemyDataForLoot = currentEnemy; // Current enemy holds the potentially elite-modified loot table
 
                 if (!enemyDataForLoot || !enemyDataForLoot.lootTable) {
-                    return;
+                    return; // No loot table defined
                 }
 
                 enemyDataForLoot.lootTable.forEach(lootEntry => {
                     if (Math.random() < lootEntry.chance) {
-                        let item;
+                        // Use the (potentially elite-boosted) chance from currentEnemy
+                        let item; // 'let'
                         let logMessagePrefix = `The ${defeatedEnemyNameForLogDisplay} dropped`;
 
                         if (lootEntry.isUnique) {
@@ -2549,6 +2769,7 @@
                             );
                             logMessagePrefix += ` something special: `;
                         } else {
+                            // Rarities from lootEntry might be an array, ensure generateItem handles this
                             item = generateItem(lootEntry.type, lootEntry.rarities);
                         }
 
@@ -2558,7 +2779,8 @@
                         if (item.type === "weapon") {
                             effectiveAttack = (item.attackBonus || 0) + item.bonus;
                             if (item.attackBonus > 0 && item.defenseBonus > 0) {
-                                effectiveAttack = item.attackBonus;
+                                // Hybrid weapon case
+                                effectiveAttack = item.attackBonus; // Only count attackBonus as the "main" part for display here
                             }
                             itemBonusText = `+${effectiveAttack} ATK`;
                             if (item.defenseBonus) {
@@ -2568,7 +2790,8 @@
                             itemBonusText = `+${item.bonus} DEF`;
                         }
 
-                        let originalName = item.name;
+                        let originalName = item.name; // Store original name before potential forging modification
+                        // Check if the original enemy template had this as a forgable item
                         const actualEnemyName = currentEnemy.isElite
                             ? currentEnemy.name.substring(6)
                             : currentEnemy.name;
@@ -2577,19 +2800,20 @@
                             originalEnemyTemplate && originalEnemyTemplate.lootTable
                                 ? originalEnemyTemplate.lootTable.find(
                                       l =>
-                                          (l.type === lootEntry.type &&
-                                              l.isUnique === lootEntry.isUnique &&
+                                          l.type === lootEntry.type &&
+                                          ((l.isUnique === lootEntry.isUnique &&
                                               l.uniqueName === lootEntry.uniqueName) ||
-                                          (!l.isUnique && !lootEntry.isUnique),
+                                              (!l.isUnique && !lootEntry.isUnique)),
                                   )
                                 : null;
 
                         if (originalLootEntry && originalLootEntry.isForgable) {
-                            const forgedBonus = Math.floor(Math.random() * 20) + 1;
+                            const forgedBonus = Math.floor(Math.random() * 20) + 1; // Example forge bonus
                             if (item.type === "weapon") {
                                 if (item.attackBonus > 0 && item.defenseBonus > 0)
-                                    item.attackBonus += forgedBonus;
-                                else item.bonus += forgedBonus;
+                                    item.attackBonus += forgedBonus; // Add to attack if hybrid
+                                else item.bonus += forgedBonus; // Add to main bonus otherwise
+
                                 effectiveAttack = (item.attackBonus || 0) + item.bonus;
                                 if (item.attackBonus > 0 && item.defenseBonus > 0) {
                                     effectiveAttack = item.attackBonus;
@@ -2598,6 +2822,7 @@
                                 if (item.defenseBonus)
                                     itemBonusText += `, +${item.defenseBonus} DEF`;
                             } else {
+                                // Armor
                                 item.bonus += forgedBonus;
                                 itemBonusText = `+${item.bonus} DEF`;
                             }
@@ -2616,9 +2841,13 @@
                 const defeatedEnemyNameForLog = currentEnemy.isElite
                     ? `<span class="elite-enemy">${currentEnemy.name}</span>`
                     : `<strong>${currentEnemy.name}</strong>`;
-                const originalXpYield = currentEnemy.xpYield;
-                const enemyDataForLoot = currentEnemy;
+                const originalXpYield = currentEnemy.xpYield; // This is already elite-modified if applicable
+                const enemyDataForLoot = currentEnemy; // Contains potentially elite-modified gold/loot
+                const G_CONST = GAME_CONSTANTS; // Alias
+
                 addLog(`You defeated the ${defeatedEnemyNameForLog}!`);
+
+                // Gold Drop
                 if (enemyDataForLoot && enemyDataForLoot.goldDropRange) {
                     let goldDropped =
                         enemyDataForLoot.goldDropRange[0] +
@@ -2642,12 +2871,17 @@
                         `The ${defeatedEnemyNameForLog} dropped <strong style="color:#ffd700;">${goldDropped.toLocaleString()} Gold</strong>!`,
                     );
                 }
+
                 const actualEnemyName = currentEnemy.isElite
                     ? currentEnemy.name.substring(6)
                     : currentEnemy.name;
+
+                // Special handling for Lost Collector
                 if (actualEnemyName === "Lost Collector") {
                     const xpReward = Math.floor(
-                        player.xpToNextLevel * (0.3 + player.level * 0.005),
+                        player.xpToNextLevel *
+                            (G_CONST.LOST_COLLECTOR_XP_REWARD.BASE_PERCENT_OF_NEXT_LEVEL +
+                                player.level * G_CONST.LOST_COLLECTOR_XP_REWARD.PER_LEVEL_PERCENT),
                     );
                     let finalXpReward = xpReward;
                     if (
@@ -2663,17 +2897,22 @@
                     addLog(
                         `The Lost Collector dissolves, leaving behind a massive surge of experience! Gained <strong>${finalXpReward.toLocaleString()}</strong> XP.`,
                     );
-                    const collectorBonus = 5 + Math.floor(player.level / 4);
+
+                    const collectorBonus =
+                        G_CONST.LOST_COLLECTOR_GEAR_BONUS_BASE +
+                        Math.floor(player.level / G_CONST.LOST_COLLECTOR_GEAR_BONUS_PER_4_LEVELS);
                     if (player.weapon.attackBonus > 0 && player.weapon.defenseBonus > 0)
-                        player.weapon.attackBonus += collectorBonus;
-                    else player.weapon.bonus += collectorBonus;
+                        player.weapon.attackBonus += collectorBonus; // Hybrid weapon
+                    else player.weapon.bonus += collectorBonus; // Standard weapon
                     player.armor.bonus += collectorBonus;
                     addLog(
                         `A strange energy enhances your gear! Your <span class="rarity-${player.weapon.rarity}">${player.weapon.name}</span> gains +${collectorBonus} to its main attack stat and your <span class="rarity-${player.armor.rarity}">${player.armor.name}</span> gains +${collectorBonus} DEF!`,
                     );
-                } else if (currentEnemy.isFinalBoss) {
+                }
+                // Special handling for Final Boss
+                else if (currentEnemy.isFinalBoss) {
                     addLog("The Nether Tyrant shatters into oblivion, its dark power dispersed!");
-                    let finalXpYield = originalXpYield;
+                    let finalXpYield = originalXpYield; // Already contains elite/base XP
                     if (
                         player.accessory &&
                         player.accessory.bonuses &&
@@ -2685,7 +2924,12 @@
                     }
                     player.xp += finalXpYield;
                     addLog(`Gained <strong>${finalXpYield.toLocaleString()}</strong> XP.`);
-                    const potionsGained = 5 + Math.floor(player.level / 5);
+
+                    const potionsGained =
+                        G_CONST.FINAL_BOSS_LOOT.POTIONS_GAINED_BASE +
+                        Math.floor(
+                            player.level / G_CONST.FINAL_BOSS_LOOT.POTIONS_PER_5_PLAYER_LEVELS,
+                        );
                     const canTake = player.maxPotions - player.potions;
                     const actuallyGained = Math.min(potionsGained, canTake);
                     if (actuallyGained > 0) {
@@ -2694,16 +2938,22 @@
                             `The Tyrant dropped <strong>${actuallyGained} Healing Potion${actuallyGained > 1 ? "s" : ""}</strong>!`,
                         );
                     }
-                    const numHighItems = 1 + (Math.random() < 0.6 ? 1 : 0);
+                    // Guaranteed high-tier items
+                    const numHighItems =
+                        G_CONST.FINAL_BOSS_LOOT.HIGH_ITEM_COUNT_BASE +
+                        (Math.random() < G_CONST.FINAL_BOSS_LOOT.HIGH_ITEM_ADDITIONAL_CHANCE
+                            ? 1
+                            : 0);
                     for (let i = 0; i < numHighItems; i++) {
                         const itemType = Math.random() < 0.5 ? "weapon" : "armor";
-                        const item = generateItem(itemType, ["Mythic", "Divine"]);
+                        const item = generateItem(itemType, ["Mythic", "Divine"]); // Example rarities
                         addLog(
                             `It dropped a pulsating <strong class="rarity-${item.rarity}">${item.name}</strong> (+${(item.bonus || 0) + (item.attackBonus || 0)} ${item.type === "weapon" ? "ATK" : "DEF"})!`,
                         );
                         tryEquipItem(item);
                     }
-                    if (Math.random() < 0.5) {
+                    // Chance for even higher tier
+                    if (Math.random() < G_CONST.FINAL_BOSS_LOOT.ETERNAL_DROP_CHANCE) {
                         const itemType = Math.random() < 0.5 ? "weapon" : "armor";
                         const item = generateItem(itemType, ["Eternal"]);
                         addLog(
@@ -2711,7 +2961,7 @@
                         );
                         tryEquipItem(item);
                     }
-                    if (Math.random() < 0.35) {
+                    if (Math.random() < G_CONST.FINAL_BOSS_LOOT.IMMORTAL_DROP_CHANCE) {
                         const itemType = Math.random() < 0.5 ? "weapon" : "armor";
                         const item = generateItem(itemType, ["Immortal"]);
                         addLog(
@@ -2719,7 +2969,7 @@
                         );
                         tryEquipItem(item);
                     }
-                    if (Math.random() < 0.2) {
+                    if (Math.random() < G_CONST.FINAL_BOSS_LOOT.TRANSCENDENT_DROP_CHANCE) {
                         const itemType = Math.random() < 0.5 ? "weapon" : "armor";
                         const item = generateItem(itemType, ["Transcendent"]);
                         addLog(
@@ -2727,8 +2977,10 @@
                         );
                         tryEquipItem(item);
                     }
-                } else {
-                    let finalXpYield = originalXpYield;
+                }
+                // Regular enemy defeat
+                else {
+                    let finalXpYield = originalXpYield; // Already contains elite/base XP
                     if (
                         player.accessory &&
                         player.accessory.bonuses &&
@@ -2740,6 +2992,8 @@
                     }
                     player.xp += finalXpYield;
                     addLog(`Gained <strong>${finalXpYield.toLocaleString()}</strong> XP.`);
+
+                    // Potion Drop
                     const baseEnemyTemplateForPotion = enemies.find(
                         e => e.name === actualEnemyName,
                     );
@@ -2747,7 +3001,8 @@
                         (baseEnemyTemplateForPotion &&
                             baseEnemyTemplateForPotion.potionDropChance) ||
                         0;
-                    if (currentEnemy.isElite) effectivePotionDropChance *= 1.5;
+                    if (currentEnemy.isElite)
+                        effectivePotionDropChance *= G_CONST.ELITE_MODIFIERS.LOOT_CHANCE_MULTIPLIER; // Elites have better potion drop
                     if (
                         player.accessory &&
                         player.accessory.bonuses &&
@@ -2762,6 +3017,8 @@
                         player.potions++;
                         addLog(`The ${defeatedEnemyNameForLog} dropped a Healing Potion!`);
                     }
+
+                    // Boss-specific potion drops (non-final bosses)
                     if (
                         (actualEnemyName === "Ancient Wyrm" ||
                             actualEnemyName === "Dungeon Guardian") &&
@@ -2778,7 +3035,10 @@
                             );
                         }
                     }
-                    handleRegularLootDrop(defeatedEnemyNameForLog);
+
+                    handleRegularLootDrop(defeatedEnemyNameForLog); // Handles item drops based on lootTable
+
+                    // Special high-tier loot for specific non-final bosses
                     const specialLootEnemyNames = [
                         "Dread Knight",
                         "Nether Sorcerer",
@@ -2797,21 +3057,27 @@
                         "Chronomancer Adept",
                         "Corrupted Treant",
                     ].includes(actualEnemyName);
+
                     if (
                         !isNewHighTierEnemy &&
                         specialLootEnemyNames.includes(actualEnemyName) &&
                         !currentEnemy.isElite
                     ) {
+                        // Elite loot is handled by boosted regular table
                         let ultraLootChance = 0;
                         let transcendentLootChance = 0;
+
                         if (
                             actualEnemyName === "Ancient Wyrm" ||
                             actualEnemyName === "Dungeon Guardian"
                         ) {
-                            ultraLootChance = 0.12;
-                            transcendentLootChance = 0.007;
+                            ultraLootChance = G_CONST.SPECIAL_BOSS_LOOT.WYRM_GUARDIAN.ULTRA_CHANCE;
+                            transcendentLootChance =
+                                G_CONST.SPECIAL_BOSS_LOOT.WYRM_GUARDIAN.TRANSCENDENT_CHANCE;
                         } else if (specialLootEnemyNames.includes(actualEnemyName)) {
-                            ultraLootChance = 0.03;
+                            // Other listed special enemies
+                            ultraLootChance =
+                                G_CONST.SPECIAL_BOSS_LOOT.HIGH_TIER_REGULAR.ULTRA_CHANCE;
                             if (
                                 [
                                     "Void Reaver",
@@ -2819,9 +3085,11 @@
                                     "Archlich Channeler",
                                 ].includes(actualEnemyName)
                             ) {
-                                transcendentLootChance = 0.004;
+                                transcendentLootChance =
+                                    G_CONST.SPECIAL_BOSS_LOOT.VOID_ETC_TRANSCENDENT_CHANCE;
                             }
                         }
+
                         if (transcendentLootChance > 0 && Math.random() < transcendentLootChance) {
                             const itemType = Math.random() < 0.5 ? "weapon" : "armor";
                             const item = generateItem(itemType, ["Transcendent"]);
@@ -2840,6 +3108,7 @@
                         }
                     }
                 }
+
                 currentEnemy = null;
                 updateEnemyStatsUI();
                 checkLevelUp();
@@ -2847,37 +3116,63 @@
             }
 
             function checkLevelUp() {
-                let leveledUp = false;
+                let leveledUp = false; // 'let' as it's a flag
+                const G_CONST_LU = GAME_CONSTANTS.LEVEL_UP_XP_MULTIPLIERS;
+                const G_CONST_HP = GAME_CONSTANTS.LEVEL_UP_HP_GAIN;
+                const G_CONST_ATK = GAME_CONSTANTS.LEVEL_UP_ATTACK_GAIN;
+                const G_CONST_DEF = GAME_CONSTANTS.LEVEL_UP_DEFENSE_GAIN;
+
                 while (player.xp >= player.xpToNextLevel) {
                     leveledUp = true;
                     const oldLevelRequirement = player.xpToNextLevel;
                     player.level++;
                     player.xp -= oldLevelRequirement;
-                    let multiplier = 1.65;
-                    if (player.level >= 26) multiplier = 1.37;
-                    else if (player.level >= 23) multiplier = 1.36;
-                    else if (player.level >= 20) multiplier = 1.35;
-                    else if (player.level >= 18) multiplier = 1.38;
-                    else if (player.level >= 12) multiplier = 1.48;
-                    player.xpToNextLevel = Math.floor(oldLevelRequirement * multiplier);
-                    if (player.xpToNextLevel <= oldLevelRequirement && player.level > 1) {
-                        player.xpToNextLevel = Math.floor(oldLevelRequirement * 1.05) + 50;
+
+                    const levelConfig =
+                        G_CONST_LU.find(m => player.level >= m.minLevel) ||
+                        G_CONST_LU[G_CONST_LU.length - 1];
+                    let newXpToNextLevel = Math.floor(oldLevelRequirement * levelConfig.multiplier);
+                    // Prevent XP requirement from stagnating or decreasing at very high levels if multiplier is too low
+                    if (newXpToNextLevel <= oldLevelRequirement && player.level > 1) {
+                        newXpToNextLevel = Math.floor(oldLevelRequirement * 1.05) + 50;
                     }
+                    player.xpToNextLevel = newXpToNextLevel;
+
                     const hpGain =
-                        Math.floor(player.maxHp * (0.18 + player.level * 0.001)) +
-                        (10 + player.level);
-                    const attackGain =
-                        Math.floor(player.baseAttack * (0.08 + player.level * 0.0005)) +
-                        (player.level % 2 === 0 ? 3 : 2) +
-                        Math.floor(player.level / 4);
-                    const defenseGain =
-                        Math.floor(player.baseDefense * (0.07 + player.level * 0.0005)) +
-                        (player.level % 3 === 0 ? 2 : 1) +
-                        Math.floor(player.level / 5);
+                        Math.floor(
+                            player.maxHp *
+                                (G_CONST_HP.BASE_PERCENT +
+                                    player.level * G_CONST_HP.LEVEL_MULTIPLIER),
+                        ) +
+                        (G_CONST_HP.FLAT_BASE + player.level);
+
+                    let attackGain =
+                        Math.floor(
+                            player.baseAttack *
+                                (G_CONST_ATK.BASE_PERCENT +
+                                    player.level * G_CONST_ATK.LEVEL_MULTIPLIER),
+                        ) +
+                        (player.level % 2 === 0
+                            ? G_CONST_ATK.EVEN_LEVEL_BONUS
+                            : G_CONST_ATK.ODD_LEVEL_BONUS) +
+                        Math.floor(player.level / 4) * G_CONST_ATK.PER_4_LEVELS_BONUS;
+
+                    let defenseGain =
+                        Math.floor(
+                            player.baseDefense *
+                                (G_CONST_DEF.BASE_PERCENT +
+                                    player.level * G_CONST_DEF.LEVEL_MULTIPLIER),
+                        ) +
+                        (player.level % 3 === 0
+                            ? G_CONST_DEF.PER_3_LEVELS_BONUS
+                            : G_CONST_DEF.OTHER_LEVELS_BONUS) +
+                        Math.floor(player.level / 5) * G_CONST_DEF.PER_5_LEVELS_BONUS;
+
                     player.maxHp += hpGain;
-                    player.currentHp = player.maxHp;
+                    player.currentHp = player.maxHp; // Full heal on level up
                     player.baseAttack += attackGain;
                     player.baseDefense += defenseGain;
+
                     addLog(
                         `<strong style="color: #00dd00;">LEVEL UP! You are now Level ${player.level}!</strong>`,
                     );
@@ -2887,61 +3182,57 @@
                 }
                 if (leveledUp) updatePlayerStatsUI();
             }
+
             function handlePlayerDefeat() {
                 addLog(`<strong style="color: #ff0000;">You have been defeated!</strong>`);
                 gameOverMessageEl.textContent = `Game Over! You reached Level ${player.level}.`;
                 gameOverScreenEl.style.display = "block";
-                toggleCombatUI(false);
-                exploreButton.style.display = "none";
-                enemyAreaEl.style.display = "none";
-                merchantAreaEl.style.display = "none";
+                toggleCombatUI(false); // Ensure combat UI is hidden
+                exploreButton.style.display = "none"; // Hide explore button
+                enemyAreaEl.style.display = "none"; // Hide enemy area
+                merchantAreaEl.style.display = "none"; // Hide merchant area
             }
 
             function resetGame() {
+                const INIT_STATS = GAME_CONSTANTS.INITIAL_PLAYER_STATS;
                 player = {
-                    level: 1,
-                    xp: 0,
-                    xpToNextLevel: 65,
-                    currentHp: 25,
-                    maxHp: 25,
-                    baseAttack: 3,
-                    baseDefense: 1,
-                    potions: 3,
-                    maxPotions: 50,
-                    gold: 0,
+                    level: INIT_STATS.LEVEL,
+                    xp: INIT_STATS.XP,
+                    xpToNextLevel: INIT_STATS.XP_TO_NEXT_LEVEL,
+                    currentHp: INIT_STATS.CURRENT_HP,
+                    maxHp: INIT_STATS.MAX_HP,
+                    baseAttack: INIT_STATS.BASE_ATTACK,
+                    baseDefense: INIT_STATS.BASE_DEFENSE,
+                    potions: INIT_STATS.POTIONS,
+                    maxPotions: INIT_STATS.MAX_POTIONS, // Defined in constants
+                    gold: INIT_STATS.GOLD,
                     isDefending: false,
-                    weapon: {
-                        name: "Old Stick",
-                        type: "weapon",
-                        bonus: 0,
-                        rarity: "Common",
-                        attackBonus: 0,
-                        defenseBonus: 0,
-                    },
-                    armor: { name: "Torn Shirt", type: "armor", bonus: 0, rarity: "Common" },
+                    weapon: { ...INIT_STATS.DEFAULT_WEAPON }, // Shallow copy for safety
+                    armor: { ...INIT_STATS.DEFAULT_ARMOR }, // Shallow copy
                     accessory: {
-                        name: "None",
-                        type: "accessory",
-                        rarity: "Common",
-                        description: "No bonus",
-                        bonuses: {},
-                    },
+                        ...INIT_STATS.DEFAULT_ACCESSORY,
+                        bonuses: { ...INIT_STATS.DEFAULT_ACCESSORY.bonuses },
+                    }, // Deeper copy for bonuses
                 };
-                updateAccessoryDescription(player.accessory);
+                updateAccessoryDescription(player.accessory); // Initialize description for default accessory
+
                 firstEncounter = true;
                 inCombat = false;
                 inMerchantEncounter = false;
                 currentEnemy = null;
                 currentMerchantOffers = [];
+                pendingPurchaseAction = null;
+
                 logEl.innerHTML = '<p>Welcome to the Dungeon! Click "Explore" to begin.</p>';
-                if (helpModalEl) helpModalEl.style.display = "none";
+                if (helpModalEl) helpModalEl.style.display = "none"; // Ensure help is hidden
+
                 updatePlayerStatsUI();
                 updateEnemyStatsUI();
                 toggleCombatUI(false);
                 toggleMerchantUI(false);
                 exploreButton.style.display = "block";
                 gameOverScreenEl.style.display = "none";
-                hidePurchaseConfirmation();
+                hidePurchaseConfirmation(); // Ensure purchase confirmation is hidden
             }
 
             // Event Listeners
@@ -2957,9 +3248,7 @@
             }
 
             buyOffer1Button.addEventListener("click", () => {
-                console.log("Buy Offer 1 button clicked.");
                 const offer = currentMerchantOffers[0];
-                console.log("Offer 1:", offer ? JSON.stringify(offer) : "null");
                 if (offer && offer.action && !offer.purchased && player.gold >= offer.cost) {
                     if (offer.type === "potion" && player.potions >= player.maxPotions) {
                         addLog("You can't carry any more potions!");
@@ -2968,24 +3257,11 @@
                     showPurchaseConfirmation(offer);
                 } else if (offer && player.gold < offer.cost) {
                     addLog("Not enough Gold!");
-                } else {
-                    console.log(
-                        "Buy Offer 1 condition not met. Offer:",
-                        offer,
-                        "Purchased:",
-                        offer ? offer.purchased : "N/A",
-                        "Gold:",
-                        player.gold,
-                        "Cost:",
-                        offer ? offer.cost : "N/A",
-                    );
                 }
             });
 
             buyOffer2Button.addEventListener("click", () => {
-                console.log("Buy Offer 2 button clicked.");
                 const offer = currentMerchantOffers[1];
-                console.log("Offer 2:", offer ? JSON.stringify(offer) : "null");
                 if (offer && offer.action && !offer.purchased && player.gold >= offer.cost) {
                     if (offer.type === "potion" && player.potions >= player.maxPotions) {
                         addLog("You can't carry any more potions!");
@@ -2994,69 +3270,60 @@
                     showPurchaseConfirmation(offer);
                 } else if (offer && player.gold < offer.cost) {
                     addLog("Not enough Gold!");
-                } else {
-                    console.log(
-                        "Buy Offer 2 condition not met. Offer:",
-                        offer,
-                        "Purchased:",
-                        offer ? offer.purchased : "N/A",
-                        "Gold:",
-                        player.gold,
-                        "Cost:",
-                        offer ? offer.cost : "N/A",
-                    );
                 }
             });
 
             leaveMerchantButton.addEventListener("click", () => {
-                console.log("Leave Merchant button clicked.");
                 addLog("The merchant waves goodbye and disappears into the shadows.");
                 toggleMerchantUI(false);
-                toggleCombatUI(false);
+                toggleCombatUI(false); // Also ensure combat UI is reset if merchant was an interruption
             });
 
             document.addEventListener("keydown", function (event) {
                 if (event.key === "Escape") {
-                    if (helpModalEl && helpModalEl.style.display === "flex") {
+                    if (purchaseConfirmationModalEl.style.display === "flex") {
+                        // Prioritize closing confirmation modal
+                        cancelPurchaseButtonEl.click();
+                        event.preventDefault();
+                        return;
+                    } else if (helpModalEl && helpModalEl.style.display === "flex") {
                         helpModalEl.style.display = "none";
                         event.preventDefault();
                         return;
                     }
                 }
+
                 function isActionable(element) {
                     return element && element.style.display !== "none" && !element.disabled;
                 }
 
-                if (event.key === "Enter") {
-                    if (
-                        purchaseConfirmationModalEl.style.display === "flex" &&
-                        isActionable(confirmPurchaseButtonEl)
-                    ) {
+                // Modal interactions first
+                if (purchaseConfirmationModalEl.style.display === "flex") {
+                    if (event.key === "Enter" && isActionable(confirmPurchaseButtonEl)) {
                         confirmPurchaseButtonEl.click();
                         event.preventDefault();
-                    } else if (
-                        gameOverScreenEl.style.display !== "none" &&
-                        isActionable(restartButton)
-                    ) {
-                        restartButton.click();
-                        event.preventDefault();
-                    } else if (isActionable(exploreButton)) {
-                        exploreButton.click();
-                        event.preventDefault();
+                        return;
                     }
-                    return;
-                }
-                if (event.key === "Backspace") {
-                    if (
-                        purchaseConfirmationModalEl.style.display === "flex" &&
-                        isActionable(cancelPurchaseButtonEl)
-                    ) {
+                    if (event.key === "Backspace" && isActionable(cancelPurchaseButtonEl)) {
                         cancelPurchaseButtonEl.click();
                         event.preventDefault();
+                        return;
                     }
-                    return;
+                    // If in modal, don't process other keys generally
+                    if (["Enter", "Backspace", "Escape"].includes(event.key)) return;
                 }
 
+                // Game Over screen
+                if (gameOverScreenEl.style.display !== "none") {
+                    if (event.key === "Enter" && isActionable(restartButton)) {
+                        restartButton.click();
+                        event.preventDefault();
+                        return;
+                    }
+                    if (["Enter", "Escape"].includes(event.key)) return; // Only Enter and Escape on game over
+                }
+
+                // Combat actions
                 if (inCombat) {
                     if (
                         (event.key === " " || event.code === "Space") &&
@@ -3077,54 +3344,40 @@
                         potionButton.click();
                         event.preventDefault();
                     }
+                    // If any combat key was processed or relevant, return
                     if (
                         [" ", "d", "D", "p", "P"].includes(event.key.toLowerCase()) ||
                         event.code === "Space"
-                    ) {
+                    )
                         return;
-                    }
                 }
+
+                // Merchant actions (only if not in combat and purchase modal is hidden)
                 if (inMerchantEncounter && purchaseConfirmationModalEl.style.display === "none") {
-                    console.log(
-                        "Merchant keydown check. Key:",
-                        event.key,
-                        "inMerchantEncounter:",
-                        inMerchantEncounter,
-                    );
-                    if (event.key === "1") {
-                        console.log(
-                            "Attempting action for key 1. Button actionable:",
-                            isActionable(buyOffer1Button),
-                        );
-                        if (isActionable(buyOffer1Button)) {
-                            buyOffer1Button.click();
-                            event.preventDefault();
-                        }
-                    } else if (event.key === "2") {
-                        console.log(
-                            "Attempting action for key 2. Button actionable:",
-                            isActionable(buyOffer2Button),
-                        );
-                        if (isActionable(buyOffer2Button)) {
-                            buyOffer2Button.click();
-                            event.preventDefault();
-                        }
-                    } else if (event.key === "3") {
-                        console.log(
-                            "Attempting action for key 3. Button actionable:",
-                            isActionable(leaveMerchantButton),
-                        );
-                        if (isActionable(leaveMerchantButton)) {
-                            leaveMerchantButton.click();
-                            event.preventDefault();
-                        }
+                    if (event.key === "1" && isActionable(buyOffer1Button)) {
+                        buyOffer1Button.click();
+                        event.preventDefault();
+                    } else if (event.key === "2" && isActionable(buyOffer2Button)) {
+                        buyOffer2Button.click();
+                        event.preventDefault();
+                    } else if (event.key === "3" && isActionable(leaveMerchantButton)) {
+                        leaveMerchantButton.click();
+                        event.preventDefault();
                     }
-                    if (["1", "2", "3"].includes(event.key)) {
-                        return;
-                    }
+                    if (["1", "2", "3"].includes(event.key)) return;
+                }
+
+                // Explore button (if no other context took precedence)
+                if (event.key === "Enter" && isActionable(exploreButton)) {
+                    exploreButton.click();
+                    event.preventDefault();
+                    return;
                 }
             });
+
             restartButton.addEventListener("click", resetGame);
+
+            // Initialize game
             resetGame();
         </script>
     </body>
