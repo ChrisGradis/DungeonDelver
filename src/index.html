@@ -320,8 +320,8 @@
             LOG_MAX_ENTRIES: 40,
             INITIAL_PLAYER_STATS: {
                 LEVEL: 1, XP: 0, XP_TO_NEXT_LEVEL: 65, CURRENT_HP: 25, MAX_HP: 25,
-                CURRENT_MP: 15, MAX_MP: 15,
-                BASE_ATTACK: 3, BASE_DEFENSE: 1, POTIONS: 3, MAX_POTIONS: 50, GOLD: 0,
+                CURRENT_MP: 15, MAX_MP: 15, SHRINE_BUFF_REMAINING: 0,
+                BASE_ATTACK: 3, BASE_DEFENSE: 1, POTIONS: 5, MAX_POTIONS: 50, GOLD: 0,
                 DEFAULT_WEAPON: { name: "Old Stick", type: "weapon", bonus: 0, rarity: "Common", attackBonus: 0, defenseBonus: 0 },
                 DEFAULT_ARMOR: { name: "Torn Shirt", type: "armor", bonus: 0, rarity: "Common" },
                 DEFAULT_ACCESSORY: { name: "None", type: "accessory", rarity: "Common", description: "No bonus", bonuses: {} }
@@ -331,7 +331,7 @@
             PLAYER_BASE_CRIT_DAMAGE_MULTIPLIER: 1.75, PLAYER_CRIT_DAMAGE_LEVEL_MULTIPLIER: 0.005,
             ENEMY_BASE_CRIT_CHANCE: 0.12, ENEMY_CRIT_CHANCE_LEVEL_MULTIPLIER: 0.0005,
             ENEMY_BASE_CRIT_DAMAGE_MULTIPLIER: 1.5, ENEMY_CRIT_DAMAGE_LEVEL_MULTIPLIER: 0.002,
-            EXPLORE_EVENT_THRESHOLDS: { LOST_COLLECTOR: 0.02, POTION_CRATE: 0.04, MERCHANT: 0.08, STRAY_POTION: 0.125, BLACKSMITH: 0.175, REST_HOUSE: 0.25 },
+            EXPLORE_EVENT_THRESHOLDS: { LOST_COLLECTOR: 0.02, POTION_CRATE: 0.08, MERCHANT: 0.18, MAGIC_SHRINE: 0.25, STRAY_POTION: 0.35, BLACKSMITH: 0.45, REST_HOUSE: 0.55 },
             ELITE_MODIFIERS: { HP_MULTIPLIER: 1.75, ATK_MULTIPLIER: 1.4, DEF_MULTIPLIER: 1.4, XP_MULTIPLIER: 2.5, GOLD_MULTIPLIER: 2, LOOT_CHANCE_MULTIPLIER: 1.5, SPAWN_MIN_PLAYER_LEVEL: 15, SPAWN_CHANCE: 0.15 }
         };
 
@@ -376,7 +376,7 @@
             { name: "Void Ascendant", baseHp: 1100, baseAttack: 110, baseDefense: 45, xpYield: 6800, goldDropRange: [1700, 2900], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.68 },
             { name: "Reality Sculptor", baseHp: 3200, baseAttack: 135, baseDefense: 75, xpYield: 14500, goldDropRange: [2400, 3900], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Eternal", "Immortal", "Transcendent"] }], potionDropChance: 0.78 },
             { name: "The Nether Tyrant", baseHp: 3500, baseAttack: 140, baseDefense: 60, xpYield: 15000, isFinalBoss: true, goldDropRange: [3000, 5500], lootTable: [] },
-            { name: "Lost Collector", isSpecial: true, baseHp: 75, baseAttack: 1, baseDefense: 5, goldDropRange: [500, 1000] }
+            { name: "Lost Collector", isSpecial: true, baseHp: 75, baseAttack: 1, baseDefense: 5, xpYield: 200, goldDropRange: [500, 1000], lootTable: [], potionDropChance: 0.25 }
         ];
 
         const itemStatsByRarity = {
@@ -464,18 +464,28 @@
         }
 
         function loadAndApplySettings() {
-            const savedFormat = localStorage.getItem('dungeonDelverNumberFormat');
-            const savedTheme = localStorage.getItem('dungeonDelverTheme');
-            if (savedFormat) gameSettings.numberFormat = savedFormat;
-            if (savedTheme) gameSettings.theme = savedTheme;
+            try {
+                const savedFormat = localStorage.getItem('dungeonDelverNumberFormat');
+                const savedTheme = localStorage.getItem('dungeonDelverTheme');
+                if (savedFormat) gameSettings.numberFormat = savedFormat;
+                if (savedTheme) gameSettings.theme = savedTheme;
+            } catch (e) {
+                // localStorage not available, use defaults
+                console.log('localStorage not available, using default settings');
+            }
             applyTheme(gameSettings.theme);
             document.getElementById(`format-${gameSettings.numberFormat}`).checked = true;
             if (player) updatePlayerStatsUI();
         }
 
         function saveSettings() {
-            localStorage.setItem('dungeonDelverNumberFormat', gameSettings.numberFormat);
-            localStorage.setItem('dungeonDelverTheme', gameSettings.theme);
+            try {
+                localStorage.setItem('dungeonDelverNumberFormat', gameSettings.numberFormat);
+                localStorage.setItem('dungeonDelverTheme', gameSettings.theme);
+            } catch (e) {
+                // localStorage not available, settings won't persist
+                console.log('localStorage not available, settings will not persist');
+            }
         }
 
         function addLog(message) {
@@ -796,7 +806,7 @@
                 player.xpToNextLevel = Math.floor(oldLevelRequirement * 1.5);
 
                 const hpGain = Math.floor(player.maxHp * 0.2) + 10;
-                const mpGain = Math.floor(player.maxMp * 0.15) + 5;
+                const mpGain = Math.floor(player.maxMp * 0.10) + 3;
                 const attackGain = Math.floor(player.baseAttack * 0.1) + 2;
                 const defenseGain = Math.floor(player.baseDefense * 0.1) + 1;
 
@@ -830,7 +840,8 @@
                 currentMp: INIT_STATS.CURRENT_MP, maxMp: INIT_STATS.MAX_MP,
                 baseAttack: INIT_STATS.BASE_ATTACK, baseDefense: INIT_STATS.BASE_DEFENSE, 
                 potions: INIT_STATS.POTIONS, maxPotions: INIT_STATS.MAX_POTIONS,
-                gold: INIT_STATS.GOLD, isDefending: false, weapon: { ...INIT_STATS.DEFAULT_WEAPON },
+                gold: INIT_STATS.GOLD, isDefending: false, shrineBuffRemaining: INIT_STATS.SHRINE_BUFF_REMAINING,
+                weapon: { ...INIT_STATS.DEFAULT_WEAPON },
                 armor: { ...INIT_STATS.DEFAULT_ARMOR }, accessory: { ...INIT_STATS.DEFAULT_ACCESSORY, bonuses: { ...INIT_STATS.DEFAULT_ACCESSORY.bonuses } }
             };
 
@@ -939,7 +950,7 @@
 
         function findPotionCrate() {
             addLog("You stumble upon an abandoned crate!");
-            const potionsFound = 3 + Math.floor(Math.random() * 4); // 3-6 potions
+            const potionsFound = 4 + Math.floor(Math.random() * 5); // 4-8 potions (was 3-6)
             const potionsCanTake = player.maxPotions - player.potions;
             const potionsTaken = Math.min(potionsFound, potionsCanTake);
             
@@ -953,6 +964,13 @@
             toggleCombatUI(false);
         }
 
+        function encounterMagicShrine() {
+            addLog("You discover a glowing magical shrine emanating ancient power...");
+            player.shrineBuffRemaining = 10;
+            addLog("<strong style='color: #9acd32;'>You feel stronger.</strong> (Effect lasts for 10 explorations)");
+            updatePlayerStatsUI();
+            toggleCombatUI(false);
+        }
         function encounterLostCollector() {
             const collectorTemplate = enemies.find(e => e.name === "Lost Collector");
             currentEnemy = {
@@ -960,6 +978,8 @@
                 currentHp: Math.floor(collectorTemplate.baseHp + player.level * 12),
                 attack: Math.floor(collectorTemplate.baseAttack + player.level * 0.5),
                 defense: Math.floor(collectorTemplate.baseDefense + player.level * 2),
+                xpYield: Math.floor((collectorTemplate.xpYield || 200) + player.level * 10),
+                goldDropRange: [collectorTemplate.goldDropRange[0] + player.level * 25, collectorTemplate.goldDropRange[1] + player.level * 50],
                 isElite: false
             };
             addLog("A shimmering figure darts out! It's a <strong>Lost Collector</strong>!");
@@ -1050,6 +1070,16 @@
         // Event listeners
         exploreButton.addEventListener("click", () => {
             addLog("You venture deeper into the dungeon...");
+            
+            // Decrement shrine buff counter
+            if (player.shrineBuffRemaining > 0) {
+                player.shrineBuffRemaining--;
+                if (player.shrineBuffRemaining === 0) {
+                    addLog("<span style='color: #888;'>The shrine's power fades away...</span>");
+                }
+                updatePlayerStatsUI();
+            }
+            
             const rand = Math.random();
             
             if (firstEncounter) {
@@ -1064,6 +1094,8 @@
                 findPotionCrate();
             } else if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.MERCHANT) {
                 encounterMerchant();
+            } else if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.MAGIC_SHRINE) {
+                encounterMagicShrine();
             } else if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.STRAY_POTION) {
                 if (player.potions < player.maxPotions) {
                     player.potions++;
@@ -1088,6 +1120,12 @@
 
             let playerEffectiveAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
             let playerDamage = Math.max(1, playerEffectiveAttack - currentEnemy.defense);
+            
+            // Apply shrine buff if active
+            if (player.shrineBuffRemaining > 0) {
+                playerDamage = Math.floor(playerDamage * 1.5);
+            }
+            
             let critChance = GAME_CONSTANTS.PLAYER_BASE_CRIT_CHANCE + player.level * GAME_CONSTANTS.PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER + ((player.accessory && player.accessory.bonuses.critChance) || 0);
             const enemyDisplayName = currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`;
 
@@ -1119,6 +1157,12 @@
             // Calculate fireball damage (total attack * 4)
             let totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
             let fireballDamage = Math.max(1, (totalAttack * 4) - currentEnemy.defense);
+            
+            // Apply shrine buff if active
+            if (player.shrineBuffRemaining > 0) {
+                fireballDamage = Math.floor(fireballDamage * 1.5);
+            }
+            
             const enemyDisplayName = currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`;
 
             addLog(`You cast <strong style="color:#ff4500;">Fireball</strong> at ${enemyDisplayName} for <strong style="color:#ff8c00;">${formatNumber(fireballDamage)}</strong> damage!`);
@@ -1245,6 +1289,20 @@
                     potionButton.click(); event.preventDefault();
                 }
                 if ([" ", "f", "F", "p", "P"].includes(event.key.toLowerCase()) || event.code === "Space") return;
+            }
+
+            if (event.key === "Enter" && isActionable(exploreButton)) {
+                exploreButton.click(); event.preventDefault(); return;
+            }
+        });
+
+        restartButton.addEventListener("click", resetGame);
+
+        // Initialize game
+        resetGame();
+    </script>
+</body>
+</html>"].includes(event.key.toLowerCase()) || event.code === "Space") return;
             }
 
             if (event.key === "Enter" && isActionable(exploreButton)) {
