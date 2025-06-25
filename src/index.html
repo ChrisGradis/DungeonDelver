@@ -338,7 +338,7 @@
         let player, currentEnemy = null, inCombat = false, firstEncounter = true, inMerchantEncounter = false;
         let currentMerchantOffers = [], pendingPurchaseAction = null;
 
-        // Data structures
+        // Data structures (keeping original for compatibility)
         const accessories = [
             { name: "Worn Locket", type: "accessory", rarity: "Common", bonuses: { flatHp: 5 }, cost: 75, description: "+5 Max HP" },
             { name: "Cracked Ring", type: "accessory", rarity: "Common", bonuses: { flatDefense: 1 }, cost: 90, description: "+1 DEF" },
@@ -469,6 +469,7 @@
                 if (savedFormat) gameSettings.numberFormat = savedFormat;
                 if (savedTheme) gameSettings.theme = savedTheme;
             } catch (e) {
+                // localStorage not available, use defaults
                 console.log('localStorage not available, using default settings');
             }
             applyTheme(gameSettings.theme);
@@ -481,6 +482,7 @@
                 localStorage.setItem('dungeonDelverNumberFormat', gameSettings.numberFormat);
                 localStorage.setItem('dungeonDelverTheme', gameSettings.theme);
             } catch (e) {
+                // localStorage not available, settings won't persist
                 console.log('localStorage not available, settings will not persist');
             }
         }
@@ -495,10 +497,15 @@
         }
 
         function updateAccessoryDescription(accessory) {
-            if (!accessory || accessory.name === "None" || !accessory.bonuses) {
+            if (!accessory) {
+                return;
+            }
+            
+            if (accessory.name === "None" || !accessory.bonuses || Object.keys(accessory.bonuses).length === 0) {
                 accessory.description = "No bonus";
                 return;
             }
+            
             let parts = [];
             for (const key in accessory.bonuses) {
                 const value = accessory.bonuses[key];
@@ -528,11 +535,12 @@
             playerGoldEl.textContent = formatNumber(player.gold);
             potionCountButtonEl.textContent = formatNumber(player.potions);
 
-            // Update HP progress bar
+            // Update HP progress bar with actual numbers
             const hpPercentage = (player.currentHp / player.maxHp) * 100;
             hpProgressEl.style.width = `${hpPercentage}%`;
             hpProgressTextEl.textContent = `${formatNumber(player.currentHp)} / ${formatNumber(player.maxHp)}`;
             
+            // Add visual states for HP
             hpProgressEl.className = "progress-bar hp-bar";
             if (hpPercentage <= 25) {
                 hpProgressEl.classList.add("critical");
@@ -540,31 +548,32 @@
                 hpProgressEl.classList.add("low");
             }
 
-            // Update MP progress bar
+            // Update MP progress bar with actual numbers
             const mpPercentage = (player.currentMp / player.maxMp) * 100;
             mpProgressEl.style.width = `${mpPercentage}%`;
             mpProgressTextEl.textContent = `${formatNumber(player.currentMp)} / ${formatNumber(player.maxMp)}`;
             
+            // Add visual states for MP
             mpProgressEl.className = "progress-bar mp-bar";
             if (mpPercentage <= 25) {
                 mpProgressEl.classList.add("low");
             }
 
-            // Update XP progress bar
+            // Update XP progress bar with actual numbers
             const xpPercentage = (player.xp / player.xpToNextLevel) * 100;
             xpProgressEl.style.width = `${xpPercentage}%`;
             xpProgressTextEl.textContent = `${formatNumber(player.xp)} / ${formatNumber(player.xpToNextLevel)}`;
 
-            const acc = player.accessory;
+            const acc = player.accessory || {};
             if (playerAccessoryNameEl) {
-                playerAccessoryNameEl.textContent = acc.name;
+                playerAccessoryNameEl.textContent = acc.name || "None";
                 playerAccessoryBonusEl.textContent = acc.description ? `(${acc.description})` : "";
                 playerAccessoryRarityEl.textContent = acc.rarity ? `[${acc.rarity}]` : "";
                 playerAccessoryRarityEl.className = acc.rarity ? `rarity-${acc.rarity}` : "rarity-Common";
             }
 
-            const accessoryAttackBonus = (acc && acc.bonuses && acc.bonuses.flatAttack) || 0;
-            const accessoryDefenseBonus = (acc && acc.bonuses && acc.bonuses.flatDefense) || 0;
+            const accessoryAttackBonus = (acc.bonuses && acc.bonuses.flatAttack) || 0;
+            const accessoryDefenseBonus = (acc.bonuses && acc.bonuses.flatDefense) || 0;
             
             const totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
             const totalDefense = player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + accessoryDefenseBonus;
@@ -628,10 +637,18 @@
                 const accessoryPool = accessories.filter(acc => possibleRarities.includes(acc.rarity));
                 if (accessoryPool.length > 0) {
                     const chosenAccessory = accessoryPool[Math.floor(Math.random() * accessoryPool.length)];
-                    return { ...chosenAccessory }; // Return a copy
+                    const accessoryCopy = { ...chosenAccessory };
+                    // Ensure bonuses object exists
+                    if (!accessoryCopy.bonuses) accessoryCopy.bonuses = {};
+                    // Update description
+                    updateAccessoryDescription(accessoryCopy);
+                    return accessoryCopy;
                 }
                 // Fallback to a basic accessory if no match
-                return { ...accessories[0] };
+                const fallbackAccessory = { ...accessories[0] };
+                if (!fallbackAccessory.bonuses) fallbackAccessory.bonuses = {};
+                updateAccessoryDescription(fallbackAccessory);
+                return fallbackAccessory;
             }
 
             const randomRarityPick = possibleRarities[Math.floor(Math.random() * possibleRarities.length)];
@@ -660,6 +677,7 @@
                 firstEncounter = false;
                 enemyTemplate = enemies.find(e => e.name === "Goblin Grunt");
             } else {
+                // Define enemy pools based on player level
                 if (player.level <= 2) {
                     enemyPool = enemies.filter(e => ["Slime", "Bat", "Goblin Grunt"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
                 } else if (player.level <= 4) {
@@ -674,24 +692,29 @@
                     enemyPool = enemies.filter(e => ["Dread Knight", "Nether Sorcerer", "Wraith"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
                 } else if (player.level <= 25) {
                     enemyPool = enemies.filter(e => ["Abyssal Behemoth", "Aspect of Shadow", "Infernal Juggernaut"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
+                    // Small chance for special bosses at higher levels
                     if (Math.random() < 0.05) {
                         const specialBosses = enemies.filter(e => e.isSpecial && !e.isFinalBoss);
                         if (specialBosses.length > 0) enemyPool.push(specialBosses[Math.floor(Math.random() * specialBosses.length)]);
                     }
                 } else if (player.level <= 30) {
                     enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
+                    // Higher chance for special bosses
                     if (Math.random() < 0.1) {
                         const specialBosses = enemies.filter(e => e.isSpecial && !e.isFinalBoss);
                         if (specialBosses.length > 0) enemyPool.push(specialBosses[Math.floor(Math.random() * specialBosses.length)]);
                     }
                 } else {
+                    // Very high level - mix of endgame enemies
                     enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isSpecial);
+                    // Chance for final boss only at very high levels (35+)
                     if (player.level >= 35 && Math.random() < 0.15) {
                         const finalBoss = enemies.find(e => e.isFinalBoss);
                         if (finalBoss) enemyPool.push(finalBoss);
                     }
                 }
                 
+                // Fallback to basic enemies if pool is empty
                 if (enemyPool.length === 0) {
                     enemyPool = enemies.filter(e => ["Slime", "Bat", "Goblin Grunt", "Skeleton"].includes(e.name));
                 }
@@ -748,7 +771,7 @@
             }
 
             // XP gain
-            let finalXpYield = currentEnemy.xpYield || 30;
+            let finalXpYield = currentEnemy.xpYield || 30; // Fallback value
             if (player.accessory && player.accessory.bonuses && player.accessory.bonuses.xpGain) {
                 finalXpYield = Math.floor(finalXpYield * (1 + player.accessory.bonuses.xpGain));
             }
@@ -887,7 +910,14 @@
                 gold: INIT_STATS.GOLD, isDefending: false, shrineBuffRemaining: INIT_STATS.SHRINE_BUFF_REMAINING,
                 weapon: { ...INIT_STATS.DEFAULT_WEAPON },
                 armor: { ...INIT_STATS.DEFAULT_ARMOR }, 
-                accessory: { ...INIT_STATS.DEFAULT_ACCESSORY, bonuses: { ...INIT_STATS.DEFAULT_ACCESSORY.bonuses } }
+                accessory: { 
+                    name: "None", 
+                    type: "accessory", 
+                    rarity: "Common", 
+                    description: "No bonus", 
+                    bonuses: {},
+                    cost: 0
+                }
             };
 
             loadAndApplySettings();
@@ -957,15 +987,18 @@
         function findBlacksmith() {
             addLog("You find a makeshift forge! A friendly blacksmith offers to temper your gear.");
             const upgradeChoice = Math.random();
-            const upgradeAmount = Math.floor(Math.random() * 3) + 1;
+            const upgradeAmount = Math.floor(Math.random() * 3) + 1; // 1-3 upgrade
             
             if (upgradeChoice < 0.4) {
+                // Upgrade weapon
                 player.weapon.bonus += upgradeAmount;
                 addLog(`The blacksmith hammers away at your <span class="rarity-${player.weapon.rarity}">${player.weapon.name}</span>. It feels more potent! (<strong>+${formatNumber(upgradeAmount)} ATK</strong>)`);
             } else if (upgradeChoice < 0.8) {
+                // Upgrade armor
                 player.armor.bonus += upgradeAmount;
                 addLog(`The blacksmith reinforces your <span class="rarity-${player.armor.rarity}">${player.armor.name}</span>. It feels sturdier! (<strong>+${formatNumber(upgradeAmount)} DEF</strong>)`);
             } else {
+                // Upgrade accessory if available
                 if (player.accessory && player.accessory.name !== "None" && Object.keys(player.accessory.bonuses).length > 0) {
                     const bonusKeys = Object.keys(player.accessory.bonuses);
                     const chosenBonusKey = bonusKeys[Math.floor(Math.random() * bonusKeys.length)];
@@ -981,6 +1014,7 @@
                     }
                     updateAccessoryDescription(player.accessory);
                 } else {
+                    // Fallback to weapon upgrade
                     player.weapon.bonus += upgradeAmount;
                     addLog(`The blacksmith hammers away at your <span class="rarity-${player.weapon.rarity}">${player.weapon.name}</span>. It feels more potent! (<strong>+${formatNumber(upgradeAmount)} ATK</strong>)`);
                 }
@@ -991,7 +1025,7 @@
 
         function findPotionCrate() {
             addLog("You stumble upon an abandoned crate!");
-            const potionsFound = 4 + Math.floor(Math.random() * 5);
+            const potionsFound = 4 + Math.floor(Math.random() * 5); // 4-8 potions (was 3-6)
             const potionsCanTake = player.maxPotions - player.potions;
             const potionsTaken = Math.min(potionsFound, potionsCanTake);
             
@@ -1012,7 +1046,6 @@
             updatePlayerStatsUI();
             toggleCombatUI(false);
         }
-
         function encounterLostCollector() {
             const collectorTemplate = enemies.find(e => e.name === "Lost Collector");
             currentEnemy = {
@@ -1020,7 +1053,7 @@
                 currentHp: Math.floor(collectorTemplate.baseHp + player.level * 12),
                 attack: Math.floor(collectorTemplate.baseAttack + player.level * 0.5),
                 defense: Math.floor(collectorTemplate.baseDefense + player.level * 2),
-                xpYield: Math.floor(collectorTemplate.xpYield + player.level * 10),
+                xpYield: Math.floor((collectorTemplate.xpYield || 200) + player.level * 10),
                 goldDropRange: [collectorTemplate.goldDropRange[0] + player.level * 25, collectorTemplate.goldDropRange[1] + player.level * 50],
                 isElite: false
             };
@@ -1032,8 +1065,10 @@
         function encounterMerchant() {
             addLog("You encounter a peculiar Wandering Merchant!");
             
+            // Generate simple merchant offers
             const offers = [];
             
+            // Offer 1: Healing Potion
             const potionCost = Math.floor(10 + player.level * 1.5 + player.maxHp * 0.03);
             offers.push({
                 description: "Health Potion",
@@ -1052,6 +1087,7 @@
                 }
             });
             
+            // Offer 2: Random gear or accessory
             let gearRarity;
             const r = Math.random();
             if (player.level <= 5) gearRarity = r < 0.7 ? "Common" : "Uncommon";
@@ -1060,9 +1096,31 @@
             else if (player.level <= 20) gearRarity = r < 0.5 ? "Epic" : "Legendary";
             else gearRarity = r < 0.5 ? "Legendary" : "Mythic";
             
-            const itemType = Math.random() < 0.5 ? "weapon" : "armor";
+            // 33% chance for accessory, 67% for weapon/armor
+            const itemTypeRoll = Math.random();
+            let itemType;
+            if (itemTypeRoll < 0.33) {
+                itemType = "accessory";
+            } else {
+                itemType = Math.random() < 0.5 ? "weapon" : "armor";
+            }
+            
             const merchantItem = generateItem(itemType, [gearRarity]);
-            const itemCost = Math.floor((merchantItem.bonus + 5) * (player.level + 5) * 2);
+            let itemCost;
+            
+            if (itemType === "accessory") {
+                // Use the accessory's predefined cost, adjusted for level
+                itemCost = Math.floor(merchantItem.cost * (1 + player.level * 0.1));
+            } else {
+                itemCost = Math.floor((merchantItem.bonus + 5) * (player.level + 5) * 2);
+            }
+            
+            let itemDisplayText;
+            if (itemType === "accessory") {
+                itemDisplayText = `<span class="rarity-${merchantItem.rarity}">${merchantItem.name}</span> (${merchantItem.description})`;
+            } else {
+                itemDisplayText = `<span class="rarity-${merchantItem.rarity}">${merchantItem.name}</span> (+${formatNumber(merchantItem.bonus)} ${merchantItem.type === "weapon" ? "ATK" : "DEF"})`;
+            }
             
             offers.push({
                 description: itemDisplayText,
@@ -1080,6 +1138,7 @@
                 }
             });
             
+            // Display merchant UI
             inMerchantEncounter = true;
             merchantAreaEl.style.display = "block";
             exploreButton.style.display = "none";
@@ -1109,6 +1168,7 @@
         exploreButton.addEventListener("click", () => {
             addLog("You venture deeper into the dungeon...");
             
+            // Decrement shrine buff counter
             if (player.shrineBuffRemaining > 0) {
                 player.shrineBuffRemaining--;
                 if (player.shrineBuffRemaining === 0) {
@@ -1124,6 +1184,7 @@
                 return;
             }
 
+            // Lost Collector only appears at level 10+
             if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.LOST_COLLECTOR && player.level >= 10) {
                 encounterLostCollector();
             } else if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.POTION_CRATE) {
@@ -1154,18 +1215,27 @@
             if (!currentEnemy || !inCombat) return;
             player.isDefending = false;
 
-            let playerEffectiveAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
+            const accessoryAttackBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.flatAttack) || 0;
+            let playerEffectiveAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
             let playerDamage = Math.max(1, playerEffectiveAttack - currentEnemy.defense);
             
+            // Apply shrine buff if active
             if (player.shrineBuffRemaining > 0) {
                 playerDamage = Math.floor(playerDamage * 1.5);
             }
             
-            let critChance = GAME_CONSTANTS.PLAYER_BASE_CRIT_CHANCE + player.level * GAME_CONSTANTS.PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER + ((player.accessory && player.accessory.bonuses.critChance) || 0);
+            let critChance = GAME_CONSTANTS.PLAYER_BASE_CRIT_CHANCE + player.level * GAME_CONSTANTS.PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER;
+            if (player.accessory && player.accessory.bonuses && player.accessory.bonuses.critChance) {
+                critChance += player.accessory.bonuses.critChance;
+            }
+            
             const enemyDisplayName = currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`;
 
             if (Math.random() < critChance) {
-                let critMultiplier = GAME_CONSTANTS.PLAYER_BASE_CRIT_DAMAGE_MULTIPLIER + player.level * GAME_CONSTANTS.PLAYER_CRIT_DAMAGE_LEVEL_MULTIPLIER + ((player.accessory && player.accessory.bonuses.critDamage) || 0);
+                let critMultiplier = GAME_CONSTANTS.PLAYER_BASE_CRIT_DAMAGE_MULTIPLIER + player.level * GAME_CONSTANTS.PLAYER_CRIT_DAMAGE_LEVEL_MULTIPLIER;
+                if (player.accessory && player.accessory.bonuses && player.accessory.bonuses.critDamage) {
+                    critMultiplier += player.accessory.bonuses.critDamage;
+                }
                 playerDamage = Math.floor(playerDamage * critMultiplier);
                 addLog(`<strong>CRITICAL HIT!</strong> You attack ${enemyDisplayName} for <strong style="color:#ff8c00;">${formatNumber(playerDamage)}</strong> damage!`);
             } else {
@@ -1186,11 +1256,15 @@
             if (!currentEnemy || !inCombat || player.currentMp < 5) return;
             player.isDefending = false;
 
+            // Deduct MP cost
             player.currentMp -= 5;
 
-            let totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
+            // Calculate fireball damage (total attack * 4)
+            const accessoryAttackBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.flatAttack) || 0;
+            let totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
             let fireballDamage = Math.max(1, (totalAttack * 4) - currentEnemy.defense);
             
+            // Apply shrine buff if active
             if (player.shrineBuffRemaining > 0) {
                 fireballDamage = Math.floor(fireballDamage * 1.5);
             }
