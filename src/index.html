@@ -323,8 +323,7 @@
                 CURRENT_MP: 15, MAX_MP: 15, SHRINE_BUFF_REMAINING: 0,
                 BASE_ATTACK: 3, BASE_DEFENSE: 1, POTIONS: 5, MAX_POTIONS: 50, GOLD: 0,
                 DEFAULT_WEAPON: { name: "Old Stick", type: "weapon", bonus: 0, rarity: "Common", attackBonus: 0, defenseBonus: 0 },
-                DEFAULT_ARMOR: { name: "Torn Shirt", type: "armor", bonus: 0, rarity: "Common" },
-                DEFAULT_ACCESSORY: { name: "None", type: "accessory", rarity: "Common", description: "No bonus", bonuses: {} }
+                DEFAULT_ARMOR: { name: "Torn Shirt", type: "armor", bonus: 0, rarity: "Common" }
             },
             POTION_HEAL_BASE_PERCENT: 0.45, POTION_HEAL_LEVEL_MULTIPLIER: 0.001,
             PLAYER_BASE_CRIT_CHANCE: 0.05, PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER: 0.003,
@@ -339,7 +338,7 @@
         let player, currentEnemy = null, inCombat = false, firstEncounter = true, inMerchantEncounter = false;
         let currentMerchantOffers = [], pendingPurchaseAction = null;
 
-        // Data structures (keeping original for compatibility)
+        // Data structures
         const accessories = [
             { name: "Worn Locket", type: "accessory", rarity: "Common", bonuses: { flatHp: 5 }, cost: 75, description: "+5 Max HP" },
             { name: "Cracked Ring", type: "accessory", rarity: "Common", bonuses: { flatDefense: 1 }, cost: 90, description: "+1 DEF" },
@@ -355,26 +354,26 @@
         ];
 
         const enemies = [
-            { name: "Slime", baseHp: 10, baseAttack: 5, baseDefense: 0, xpYield: 12, goldDropRange: [8, 15], lootTable: [{ type: "armor", chance: 0.25, rarities: ["Common"] }], potionDropChance: 0.08 },
-            { name: "Bat", baseHp: 8, baseAttack: 6, baseDefense: 0, xpYield: 10, goldDropRange: [6, 12], lootTable: [{ type: "weapon", chance: 0.15, rarities: ["Common"] }], potionDropChance: 0.04 },
-            { name: "Skeleton", baseHp: 20, baseAttack: 8, baseDefense: 1, xpYield: 25, goldDropRange: [15, 25], lootTable: [{ type: "weapon", chance: 0.4, rarities: ["Common"] }, { type: "armor", chance: 0.25, rarities: ["Common"] }], potionDropChance: 0.12 },
-            { name: "Goblin Grunt", baseHp: 20, baseAttack: 5, baseDefense: 0, xpYield: 30, goldDropRange: [18, 28], lootTable: [{ type: "weapon", chance: 0.6, rarities: ["Common"] }], potionDropChance: 0.3 },
-            { name: "Cave Spider", baseHp: 18, baseAttack: 9, baseDefense: 0, xpYield: 35, goldDropRange: [20, 35], lootTable: [{ type: "weapon", chance: 0.55, rarities: ["Common", "Uncommon"] }], potionDropChance: 0.25 },
-            { name: "Orc Scout", baseHp: 45, baseAttack: 13, baseDefense: 2, xpYield: 60, goldDropRange: [30, 50], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Common", "Uncommon"] }], potionDropChance: 0.28 },
-            { name: "Dire Wolf", baseHp: 55, baseAttack: 18, baseDefense: 2, xpYield: 75, goldDropRange: [40, 65], lootTable: [{ type: "weapon", chance: 0.65, rarities: ["Uncommon", "Rare"] }], potionDropChance: 0.22 },
-            { name: "Stone Golem", baseHp: 120, baseAttack: 20, baseDefense: 8, xpYield: 130, goldDropRange: [60, 100], lootTable: [{ type: "weapon", chance: 0.6, rarities: ["Rare", "Epic"] }], potionDropChance: 0.18 },
-            { name: "Ogre Brute", baseHp: 150, baseAttack: 25, baseDefense: 7, xpYield: 160, goldDropRange: [75, 120], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Uncommon", "Rare", "Epic"] }], potionDropChance: 0.18 },
-            { name: "Deep Goblin Shaman", baseHp: 100, baseAttack: 28, baseDefense: 3, xpYield: 150, goldDropRange: [80, 130], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Uncommon", "Rare", "Epic"] }], potionDropChance: 0.32 },
-            { name: "Minotaur Charger", baseHp: 220, baseAttack: 42, baseDefense: 12, xpYield: 380, goldDropRange: [150, 250], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Rare", "Epic", "Legendary"] }], potionDropChance: 0.23 },
-            { name: "Wraith", baseHp: 180, baseAttack: 48, baseDefense: 8, xpYield: 350, goldDropRange: [170, 280], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Rare", "Epic", "Legendary"] }], potionDropChance: 0.18 },
-            { name: "Dread Knight", baseHp: 380, baseAttack: 50, baseDefense: 25, xpYield: 700, goldDropRange: [300, 500], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Epic", "Legendary", "Mythic"] }], potionDropChance: 0.38 },
-            { name: "Nether Sorcerer", baseHp: 320, baseAttack: 60, baseDefense: 15, xpYield: 650, goldDropRange: [330, 550], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Epic", "Legendary", "Mythic"] }], potionDropChance: 0.33 },
-            { name: "Abyssal Behemoth", baseHp: 600, baseAttack: 65, baseDefense: 35, xpYield: 1200, goldDropRange: [400, 670], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Legendary", "Mythic", "Divine"] }], potionDropChance: 0.48 },
-            { name: "Aspect of Shadow", baseHp: 480, baseAttack: 80, baseDefense: 22, xpYield: 1150, goldDropRange: [430, 700], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Legendary", "Mythic", "Divine"] }], potionDropChance: 0.38 },
-            { name: "Infernal Juggernaut", baseHp: 850, baseAttack: 85, baseDefense: 42, xpYield: 2000, goldDropRange: [600, 1000], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Mythic", "Divine", "Eternal"] }], potionDropChance: 0.58 },
-            { name: "Celestial Paladin", baseHp: 2000, baseAttack: 95, baseDefense: 65, xpYield: 7500, goldDropRange: [1400, 2400], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.68 },
-            { name: "Void Ascendant", baseHp: 1100, baseAttack: 110, baseDefense: 45, xpYield: 6800, goldDropRange: [1700, 2900], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.68 },
-            { name: "Reality Sculptor", baseHp: 3200, baseAttack: 135, baseDefense: 75, xpYield: 14500, goldDropRange: [2400, 3900], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Eternal", "Immortal", "Transcendent"] }], potionDropChance: 0.78 },
+            { name: "Slime", baseHp: 10, baseAttack: 5, baseDefense: 0, xpYield: 12, goldDropRange: [8, 15], lootTable: [{ type: "armor", chance: 0.4, rarities: ["Common"] }], potionDropChance: 0.15 },
+            { name: "Bat", baseHp: 8, baseAttack: 6, baseDefense: 0, xpYield: 10, goldDropRange: [6, 12], lootTable: [{ type: "weapon", chance: 0.25, rarities: ["Common"] }], potionDropChance: 0.12 },
+            { name: "Skeleton", baseHp: 20, baseAttack: 8, baseDefense: 1, xpYield: 25, goldDropRange: [15, 25], lootTable: [{ type: "weapon", chance: 0.6, rarities: ["Common"] }, { type: "armor", chance: 0.4, rarities: ["Common"] }], potionDropChance: 0.25 },
+            { name: "Goblin Grunt", baseHp: 20, baseAttack: 5, baseDefense: 0, xpYield: 30, goldDropRange: [18, 28], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Common"] }, { type: "accessory", chance: 0.15, rarities: ["Common"] }], potionDropChance: 0.4 },
+            { name: "Cave Spider", baseHp: 18, baseAttack: 9, baseDefense: 0, xpYield: 35, goldDropRange: [20, 35], lootTable: [{ type: "weapon", chance: 0.65, rarities: ["Common", "Uncommon"] }], potionDropChance: 0.35 },
+            { name: "Orc Scout", baseHp: 45, baseAttack: 13, baseDefense: 2, xpYield: 60, goldDropRange: [30, 50], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Common", "Uncommon"] }, { type: "accessory", chance: 0.2, rarities: ["Common", "Uncommon"] }], potionDropChance: 0.38 },
+            { name: "Dire Wolf", baseHp: 55, baseAttack: 18, baseDefense: 2, xpYield: 75, goldDropRange: [40, 65], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Uncommon", "Rare"] }], potionDropChance: 0.32 },
+            { name: "Stone Golem", baseHp: 120, baseAttack: 20, baseDefense: 8, xpYield: 130, goldDropRange: [60, 100], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Rare", "Epic"] }, { type: "accessory", chance: 0.25, rarities: ["Uncommon", "Rare"] }], potionDropChance: 0.28 },
+            { name: "Ogre Brute", baseHp: 150, baseAttack: 25, baseDefense: 7, xpYield: 160, goldDropRange: [75, 120], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Uncommon", "Rare", "Epic"] }], potionDropChance: 0.28 },
+            { name: "Deep Goblin Shaman", baseHp: 100, baseAttack: 28, baseDefense: 3, xpYield: 150, goldDropRange: [80, 130], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Uncommon", "Rare", "Epic"] }, { type: "accessory", chance: 0.3, rarities: ["Rare", "Epic"] }], potionDropChance: 0.42 },
+            { name: "Minotaur Charger", baseHp: 220, baseAttack: 42, baseDefense: 12, xpYield: 380, goldDropRange: [150, 250], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Rare", "Epic", "Legendary"] }, { type: "accessory", chance: 0.35, rarities: ["Rare", "Epic"] }], potionDropChance: 0.33 },
+            { name: "Wraith", baseHp: 180, baseAttack: 48, baseDefense: 8, xpYield: 350, goldDropRange: [170, 280], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Rare", "Epic", "Legendary"] }, { type: "accessory", chance: 0.3, rarities: ["Epic", "Legendary"] }], potionDropChance: 0.28 },
+            { name: "Dread Knight", baseHp: 380, baseAttack: 50, baseDefense: 25, xpYield: 700, goldDropRange: [300, 500], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Epic", "Legendary", "Mythic"] }], potionDropChance: 0.48 },
+            { name: "Nether Sorcerer", baseHp: 320, baseAttack: 60, baseDefense: 15, xpYield: 650, goldDropRange: [330, 550], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Epic", "Legendary", "Mythic"] }], potionDropChance: 0.43 },
+            { name: "Abyssal Behemoth", baseHp: 600, baseAttack: 65, baseDefense: 35, xpYield: 1200, goldDropRange: [400, 670], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Legendary", "Mythic", "Divine"] }], potionDropChance: 0.58 },
+            { name: "Aspect of Shadow", baseHp: 480, baseAttack: 80, baseDefense: 22, xpYield: 1150, goldDropRange: [430, 700], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Legendary", "Mythic", "Divine"] }], potionDropChance: 0.48 },
+            { name: "Infernal Juggernaut", baseHp: 850, baseAttack: 85, baseDefense: 42, xpYield: 2000, goldDropRange: [600, 1000], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Mythic", "Divine", "Eternal"] }], potionDropChance: 0.68 },
+            { name: "Celestial Paladin", baseHp: 2000, baseAttack: 95, baseDefense: 65, xpYield: 7500, goldDropRange: [1400, 2400], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.78 },
+            { name: "Void Ascendant", baseHp: 1100, baseAttack: 110, baseDefense: 45, xpYield: 6800, goldDropRange: [1700, 2900], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.78 },
+            { name: "Reality Sculptor", baseHp: 3200, baseAttack: 135, baseDefense: 75, xpYield: 14500, goldDropRange: [2400, 3900], lootTable: [{ type: "weapon", chance: 1.0, rarities: ["Eternal", "Immortal", "Transcendent"] }], potionDropChance: 0.88 },
             { name: "The Nether Tyrant", baseHp: 3500, baseAttack: 140, baseDefense: 60, xpYield: 15000, isFinalBoss: true, goldDropRange: [3000, 5500], lootTable: [] },
             { name: "Lost Collector", isSpecial: true, baseHp: 75, baseAttack: 1, baseDefense: 5, xpYield: 200, goldDropRange: [500, 1000], lootTable: [], potionDropChance: 0.25 }
         ];
@@ -470,7 +469,6 @@
                 if (savedFormat) gameSettings.numberFormat = savedFormat;
                 if (savedTheme) gameSettings.theme = savedTheme;
             } catch (e) {
-                // localStorage not available, use defaults
                 console.log('localStorage not available, using default settings');
             }
             applyTheme(gameSettings.theme);
@@ -483,7 +481,6 @@
                 localStorage.setItem('dungeonDelverNumberFormat', gameSettings.numberFormat);
                 localStorage.setItem('dungeonDelverTheme', gameSettings.theme);
             } catch (e) {
-                // localStorage not available, settings won't persist
                 console.log('localStorage not available, settings will not persist');
             }
         }
@@ -531,12 +528,11 @@
             playerGoldEl.textContent = formatNumber(player.gold);
             potionCountButtonEl.textContent = formatNumber(player.potions);
 
-            // Update HP progress bar with actual numbers
+            // Update HP progress bar
             const hpPercentage = (player.currentHp / player.maxHp) * 100;
             hpProgressEl.style.width = `${hpPercentage}%`;
             hpProgressTextEl.textContent = `${formatNumber(player.currentHp)} / ${formatNumber(player.maxHp)}`;
             
-            // Add visual states for HP
             hpProgressEl.className = "progress-bar hp-bar";
             if (hpPercentage <= 25) {
                 hpProgressEl.classList.add("critical");
@@ -544,18 +540,17 @@
                 hpProgressEl.classList.add("low");
             }
 
-            // Update MP progress bar with actual numbers
+            // Update MP progress bar
             const mpPercentage = (player.currentMp / player.maxMp) * 100;
             mpProgressEl.style.width = `${mpPercentage}%`;
             mpProgressTextEl.textContent = `${formatNumber(player.currentMp)} / ${formatNumber(player.maxMp)}`;
             
-            // Add visual states for MP
             mpProgressEl.className = "progress-bar mp-bar";
             if (mpPercentage <= 25) {
                 mpProgressEl.classList.add("low");
             }
 
-            // Update XP progress bar with actual numbers
+            // Update XP progress bar
             const xpPercentage = (player.xp / player.xpToNextLevel) * 100;
             xpProgressEl.style.width = `${xpPercentage}%`;
             xpProgressTextEl.textContent = `${formatNumber(player.xp)} / ${formatNumber(player.xpToNextLevel)}`;
@@ -568,8 +563,11 @@
                 playerAccessoryRarityEl.className = acc.rarity ? `rarity-${acc.rarity}` : "rarity-Common";
             }
 
-            const totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((acc && acc.bonuses && acc.bonuses.flatAttack) || 0);
-            const totalDefense = player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + ((acc && acc.bonuses && acc.bonuses.flatDefense) || 0);
+            const accessoryAttackBonus = (acc && acc.bonuses && acc.bonuses.flatAttack) || 0;
+            const accessoryDefenseBonus = (acc && acc.bonuses && acc.bonuses.flatDefense) || 0;
+            
+            const totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
+            const totalDefense = player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + accessoryDefenseBonus;
             playerTotalAttackEl.textContent = formatNumber(totalAttack);
             playerTotalDefenseEl.textContent = formatNumber(totalDefense);
 
@@ -624,6 +622,18 @@
                     rarity: uniqueItemData.uniqueRarity
                 };
             }
+
+            // Handle accessory generation
+            if (itemType === "accessory") {
+                const accessoryPool = accessories.filter(acc => possibleRarities.includes(acc.rarity));
+                if (accessoryPool.length > 0) {
+                    const chosenAccessory = accessoryPool[Math.floor(Math.random() * accessoryPool.length)];
+                    return { ...chosenAccessory }; // Return a copy
+                }
+                // Fallback to a basic accessory if no match
+                return { ...accessories[0] };
+            }
+
             const randomRarityPick = possibleRarities[Math.floor(Math.random() * possibleRarities.length)];
             const rarity = itemStatsByRarity[randomRarityPick] ? randomRarityPick : "Common";
             const rarityInfo = itemStatsByRarity[rarity];
@@ -650,7 +660,6 @@
                 firstEncounter = false;
                 enemyTemplate = enemies.find(e => e.name === "Goblin Grunt");
             } else {
-                // Define enemy pools based on player level
                 if (player.level <= 2) {
                     enemyPool = enemies.filter(e => ["Slime", "Bat", "Goblin Grunt"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
                 } else if (player.level <= 4) {
@@ -665,29 +674,24 @@
                     enemyPool = enemies.filter(e => ["Dread Knight", "Nether Sorcerer", "Wraith"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
                 } else if (player.level <= 25) {
                     enemyPool = enemies.filter(e => ["Abyssal Behemoth", "Aspect of Shadow", "Infernal Juggernaut"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                    // Small chance for special bosses at higher levels
                     if (Math.random() < 0.05) {
                         const specialBosses = enemies.filter(e => e.isSpecial && !e.isFinalBoss);
                         if (specialBosses.length > 0) enemyPool.push(specialBosses[Math.floor(Math.random() * specialBosses.length)]);
                     }
                 } else if (player.level <= 30) {
                     enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                    // Higher chance for special bosses
                     if (Math.random() < 0.1) {
                         const specialBosses = enemies.filter(e => e.isSpecial && !e.isFinalBoss);
                         if (specialBosses.length > 0) enemyPool.push(specialBosses[Math.floor(Math.random() * specialBosses.length)]);
                     }
                 } else {
-                    // Very high level - mix of endgame enemies
                     enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isSpecial);
-                    // Chance for final boss only at very high levels (35+)
                     if (player.level >= 35 && Math.random() < 0.15) {
                         const finalBoss = enemies.find(e => e.isFinalBoss);
                         if (finalBoss) enemyPool.push(finalBoss);
                     }
                 }
                 
-                // Fallback to basic enemies if pool is empty
                 if (enemyPool.length === 0) {
                     enemyPool = enemies.filter(e => ["Slime", "Bat", "Goblin Grunt", "Skeleton"].includes(e.name));
                 }
@@ -737,14 +741,14 @@
             addLog(`You defeated the ${defeatedEnemyName}!`);
 
             // Gold drop
-            if (currentEnemy.goldDropRange) {
+            if (currentEnemy.goldDropRange && currentEnemy.goldDropRange.length >= 2) {
                 const goldDropped = currentEnemy.goldDropRange[0] + Math.floor(Math.random() * (currentEnemy.goldDropRange[1] - currentEnemy.goldDropRange[0] + 1));
                 player.gold += goldDropped;
                 addLog(`The ${defeatedEnemyName} dropped <strong style="color:#ffd700;">${formatNumber(goldDropped)} Gold</strong>!`);
             }
 
             // XP gain
-            let finalXpYield = currentEnemy.xpYield;
+            let finalXpYield = currentEnemy.xpYield || 30;
             if (player.accessory && player.accessory.bonuses && player.accessory.bonuses.xpGain) {
                 finalXpYield = Math.floor(finalXpYield * (1 + player.accessory.bonuses.xpGain));
             }
@@ -752,12 +756,22 @@
             addLog(`Gained <strong>${formatNumber(finalXpYield)}</strong> XP.`);
 
             // Loot drop
-            if (currentEnemy.lootTable && Math.random() < 0.3) {
+            if (currentEnemy.lootTable && currentEnemy.lootTable.length > 0 && Math.random() < 0.55) {
                 const lootEntry = currentEnemy.lootTable[Math.floor(Math.random() * currentEnemy.lootTable.length)];
                 if (Math.random() < lootEntry.chance) {
                     const item = generateItem(lootEntry.type, lootEntry.rarities);
                     addLog(`The ${defeatedEnemyName} dropped <strong class="rarity-${item.rarity}">${item.name}</strong>!`);
                     tryEquipItem(item);
+                }
+            }
+
+            // Potion drop chance
+            if (currentEnemy.potionDropChance && Math.random() < currentEnemy.potionDropChance) {
+                if (player.potions < player.maxPotions) {
+                    player.potions++;
+                    addLog(`The ${defeatedEnemyName} dropped a <strong>Healing Potion</strong>!`);
+                } else {
+                    addLog(`The ${defeatedEnemyName} dropped a potion, but you can't carry any more.`);
                 }
             }
 
@@ -786,6 +800,36 @@
                 if (newItem.bonus > player.armor.bonus) {
                     player.armor = newItem;
                     addLog(`Equipped new armor: <span class="rarity-${newItem.rarity}">${newItem.name}</span>!`);
+                    equipped = true;
+                }
+            } else if (newItem.type === "accessory") {
+                // Handle accessory replacement
+                const oldAccessory = player.accessory;
+                const oldHpBonus = (oldAccessory && oldAccessory.bonuses && oldAccessory.bonuses.flatHp) || 0;
+                const newHpBonus = (newItem.bonuses && newItem.bonuses.flatHp) || 0;
+                
+                // For accessories, always offer to equip (player decides if it's better)
+                if (player.accessory.name === "None" || newItem.cost > (player.accessory.cost || 0)) {
+                    // Ensure the new accessory has proper structure
+                    if (!newItem.bonuses) newItem.bonuses = {};
+                    if (!newItem.description) updateAccessoryDescription(newItem);
+                    
+                    // Update HP if there's a difference in HP bonuses
+                    const hpDifference = newHpBonus - oldHpBonus;
+                    if (hpDifference !== 0) {
+                        player.maxHp += hpDifference;
+                        player.currentHp += hpDifference;
+                        if (hpDifference > 0) {
+                            addLog(`Max HP increased by ${formatNumber(hpDifference)}!`);
+                        } else {
+                            addLog(`Max HP decreased by ${formatNumber(-hpDifference)}.`);
+                            // Ensure current HP doesn't exceed new max
+                            player.currentHp = Math.min(player.currentHp, player.maxHp);
+                        }
+                    }
+                    
+                    player.accessory = newItem;
+                    addLog(`Equipped new accessory: <span class="rarity-${newItem.rarity}">${newItem.name}</span>!`);
                     equipped = true;
                 }
             }
@@ -842,7 +886,8 @@
                 potions: INIT_STATS.POTIONS, maxPotions: INIT_STATS.MAX_POTIONS,
                 gold: INIT_STATS.GOLD, isDefending: false, shrineBuffRemaining: INIT_STATS.SHRINE_BUFF_REMAINING,
                 weapon: { ...INIT_STATS.DEFAULT_WEAPON },
-                armor: { ...INIT_STATS.DEFAULT_ARMOR }, accessory: { ...INIT_STATS.DEFAULT_ACCESSORY, bonuses: { ...INIT_STATS.DEFAULT_ACCESSORY.bonuses } }
+                armor: { ...INIT_STATS.DEFAULT_ARMOR }, 
+                accessory: { ...INIT_STATS.DEFAULT_ACCESSORY, bonuses: { ...INIT_STATS.DEFAULT_ACCESSORY.bonuses } }
             };
 
             loadAndApplySettings();
@@ -912,18 +957,15 @@
         function findBlacksmith() {
             addLog("You find a makeshift forge! A friendly blacksmith offers to temper your gear.");
             const upgradeChoice = Math.random();
-            const upgradeAmount = Math.floor(Math.random() * 3) + 1; // 1-3 upgrade
+            const upgradeAmount = Math.floor(Math.random() * 3) + 1;
             
             if (upgradeChoice < 0.4) {
-                // Upgrade weapon
                 player.weapon.bonus += upgradeAmount;
                 addLog(`The blacksmith hammers away at your <span class="rarity-${player.weapon.rarity}">${player.weapon.name}</span>. It feels more potent! (<strong>+${formatNumber(upgradeAmount)} ATK</strong>)`);
             } else if (upgradeChoice < 0.8) {
-                // Upgrade armor
                 player.armor.bonus += upgradeAmount;
                 addLog(`The blacksmith reinforces your <span class="rarity-${player.armor.rarity}">${player.armor.name}</span>. It feels sturdier! (<strong>+${formatNumber(upgradeAmount)} DEF</strong>)`);
             } else {
-                // Upgrade accessory if available
                 if (player.accessory && player.accessory.name !== "None" && Object.keys(player.accessory.bonuses).length > 0) {
                     const bonusKeys = Object.keys(player.accessory.bonuses);
                     const chosenBonusKey = bonusKeys[Math.floor(Math.random() * bonusKeys.length)];
@@ -939,7 +981,6 @@
                     }
                     updateAccessoryDescription(player.accessory);
                 } else {
-                    // Fallback to weapon upgrade
                     player.weapon.bonus += upgradeAmount;
                     addLog(`The blacksmith hammers away at your <span class="rarity-${player.weapon.rarity}">${player.weapon.name}</span>. It feels more potent! (<strong>+${formatNumber(upgradeAmount)} ATK</strong>)`);
                 }
@@ -950,7 +991,7 @@
 
         function findPotionCrate() {
             addLog("You stumble upon an abandoned crate!");
-            const potionsFound = 4 + Math.floor(Math.random() * 5); // 4-8 potions (was 3-6)
+            const potionsFound = 4 + Math.floor(Math.random() * 5);
             const potionsCanTake = player.maxPotions - player.potions;
             const potionsTaken = Math.min(potionsFound, potionsCanTake);
             
@@ -971,6 +1012,7 @@
             updatePlayerStatsUI();
             toggleCombatUI(false);
         }
+
         function encounterLostCollector() {
             const collectorTemplate = enemies.find(e => e.name === "Lost Collector");
             currentEnemy = {
@@ -978,7 +1020,7 @@
                 currentHp: Math.floor(collectorTemplate.baseHp + player.level * 12),
                 attack: Math.floor(collectorTemplate.baseAttack + player.level * 0.5),
                 defense: Math.floor(collectorTemplate.baseDefense + player.level * 2),
-                xpYield: Math.floor((collectorTemplate.xpYield || 200) + player.level * 10),
+                xpYield: Math.floor(collectorTemplate.xpYield + player.level * 10),
                 goldDropRange: [collectorTemplate.goldDropRange[0] + player.level * 25, collectorTemplate.goldDropRange[1] + player.level * 50],
                 isElite: false
             };
@@ -990,10 +1032,8 @@
         function encounterMerchant() {
             addLog("You encounter a peculiar Wandering Merchant!");
             
-            // Generate simple merchant offers
             const offers = [];
             
-            // Offer 1: Healing Potion
             const potionCost = Math.floor(10 + player.level * 1.5 + player.maxHp * 0.03);
             offers.push({
                 description: "Health Potion",
@@ -1012,7 +1052,6 @@
                 }
             });
             
-            // Offer 2: Random gear
             let gearRarity;
             const r = Math.random();
             if (player.level <= 5) gearRarity = r < 0.7 ? "Common" : "Uncommon";
@@ -1026,7 +1065,7 @@
             const itemCost = Math.floor((merchantItem.bonus + 5) * (player.level + 5) * 2);
             
             offers.push({
-                description: `<span class="rarity-${merchantItem.rarity}">${merchantItem.name}</span> (+${formatNumber(merchantItem.bonus)} ${merchantItem.type === "weapon" ? "ATK" : "DEF"})`,
+                description: itemDisplayText,
                 cost: itemCost,
                 item: merchantItem,
                 action: () => {
@@ -1041,7 +1080,6 @@
                 }
             });
             
-            // Display merchant UI
             inMerchantEncounter = true;
             merchantAreaEl.style.display = "block";
             exploreButton.style.display = "none";
@@ -1071,7 +1109,6 @@
         exploreButton.addEventListener("click", () => {
             addLog("You venture deeper into the dungeon...");
             
-            // Decrement shrine buff counter
             if (player.shrineBuffRemaining > 0) {
                 player.shrineBuffRemaining--;
                 if (player.shrineBuffRemaining === 0) {
@@ -1087,7 +1124,6 @@
                 return;
             }
 
-            // Lost Collector only appears at level 10+
             if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.LOST_COLLECTOR && player.level >= 10) {
                 encounterLostCollector();
             } else if (rand < GAME_CONSTANTS.EXPLORE_EVENT_THRESHOLDS.POTION_CRATE) {
@@ -1121,7 +1157,6 @@
             let playerEffectiveAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
             let playerDamage = Math.max(1, playerEffectiveAttack - currentEnemy.defense);
             
-            // Apply shrine buff if active
             if (player.shrineBuffRemaining > 0) {
                 playerDamage = Math.floor(playerDamage * 1.5);
             }
@@ -1151,14 +1186,11 @@
             if (!currentEnemy || !inCombat || player.currentMp < 5) return;
             player.isDefending = false;
 
-            // Deduct MP cost
             player.currentMp -= 5;
 
-            // Calculate fireball damage (total attack * 4)
             let totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + ((player.accessory && player.accessory.bonuses.flatAttack) || 0);
             let fireballDamage = Math.max(1, (totalAttack * 4) - currentEnemy.defense);
             
-            // Apply shrine buff if active
             if (player.shrineBuffRemaining > 0) {
                 fireballDamage = Math.floor(fireballDamage * 1.5);
             }
@@ -1182,9 +1214,13 @@
             if (player.potions > 0 && player.currentHp < player.maxHp && inCombat) {
                 player.potions--;
                 let healAmount = Math.floor(player.maxHp * (GAME_CONSTANTS.POTION_HEAL_BASE_PERCENT + player.level * GAME_CONSTANTS.POTION_HEAL_LEVEL_MULTIPLIER));
-                if (player.accessory && player.accessory.bonuses && player.accessory.bonuses.potionEffectiveness) {
-                    healAmount = Math.floor(healAmount * (1 + player.accessory.bonuses.potionEffectiveness));
+                
+                // Apply accessory potion effectiveness bonus if available
+                const potionBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.potionEffectiveness) || 0;
+                if (potionBonus > 0) {
+                    healAmount = Math.floor(healAmount * (1 + potionBonus));
                 }
+                
                 player.currentHp = Math.min(player.maxHp, player.currentHp + healAmount);
                 addLog(`You drink a potion and restore <strong>${formatNumber(healAmount)}</strong> HP.`);
                 updatePlayerStatsUI();
@@ -1194,7 +1230,8 @@
         function enemyTurn() {
             if (!currentEnemy || currentEnemy.currentHp <= 0) return;
             
-            let effectivePlayerDefense = (player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + ((player.accessory && player.accessory.bonuses.flatDefense) || 0)) * (player.isDefending ? 2 : 1);
+            const accessoryDefenseBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.flatDefense) || 0;
+            let effectivePlayerDefense = (player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + accessoryDefenseBonus) * (player.isDefending ? 2 : 1);
             let enemyDamage = Math.max(1, currentEnemy.attack - effectivePlayerDefense);
             const enemyDisplayName = currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`;
 
