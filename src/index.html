@@ -1,320 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gradis' Dungeon Delver</title>
-    <style>
-        :root {
-            --bg: #1a1a1a; --text: #c0c0c0; --container-bg: #0d0d0d; --border: #333;
-            --accent: #ff6347; --blue: #4682b4; --gold: #ffd700; --green: #9acd32; --pink: #ffb6c1;
-            --enemy-bg: #2a0000; --merchant-bg: #2a2a2a; --log-bg: #111; --item-bg: #222;
-            --btn-bg: #363636; --btn-hover: #4682b4; --btn-disabled: #222;
-        }
-        body.light-theme {
-            --bg: #f4f4f8; --text: #333; --container-bg: #fff; --border: #ccc;
-            --accent: #c0392b; --blue: #2980b9; --gold: #f39c12; --green: #27ae60; --pink: #8e44ad;
-            --enemy-bg: #ffebee; --merchant-bg: #e8f5e9; --log-bg: #f8f9f9; --item-bg: #eee;
-            --btn-bg: #bdc3c7; --btn-hover: #3498db; --btn-disabled: #e0e0e0;
-        }
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Courier New', monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center;
-            background: var(--bg); color: var(--text); touch-action: manipulation; line-height: 1.6; transition: all 0.3s;
-        }
-        .container {
-            width: 100%; max-width: 600px; background: var(--container-bg); padding: 15px; border: 1px solid var(--border);
-            border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); margin-bottom: 10px; transition: all 0.3s;
-        }
-        h1, h2 { text-align: center; color: var(--accent); margin-top: 0; }
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 10px; 
-            margin-bottom: 15px; 
-            font-size: 0.9em; 
-        }
-        .stats-grid div { background: var(--item-bg); padding: 8px; border-radius: 3px; }
-        .stats-grid strong, .equipment-grid strong { color: var(--blue); }
-        #player-gold { color: var(--gold); }
-        .equipment-grid { display: grid; grid-template-columns: 1fr; gap: 5px; margin-top: 10px; font-size: 0.85em; }
-        .equipment-grid div { background: var(--item-bg); padding: 8px; border-radius: 3px; margin-bottom: 5px; }
-        .equipment-grid div:last-child { margin-bottom: 0; }
-        .equipment-grid .item-name { color: var(--green); }
-        .equipment-grid .item-bonus { color: var(--pink); font-size: 0.9em; }
-        .rarity-Common { color: #bebebe; } .rarity-Uncommon { color: #1eff00; } .rarity-Rare { color: #00b0ff; }
-        .rarity-Epic { color: #c700ff; } .rarity-Legendary { color: #ffa500; } .rarity-Mythic { color: #ff3c00; }
-        .rarity-Divine { color: #ffdf00; } .rarity-Eternal { color: #00ffff; } .rarity-Immortal { color: #ff00ff; }
-        .rarity-Transcendent {
-            font-weight: bold; background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            animation: rainbow 3s ease-in-out infinite; background-size: 400% 100%;
-        }
-        @keyframes rainbow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        .elite-enemy { color: var(--accent); font-weight: bold; }
-        #enemy-info, #merchant-area { text-align: center; margin-bottom: 15px; padding: 10px; border-radius: 3px; min-height: 50px; background: var(--enemy-bg); }
-        #merchant-area { background: var(--merchant-bg); }
-        #merchant-title { font-size: 1.2em; color: #61dafb; margin-bottom: 10px; }
-        .merchant-offer { padding: 8px; margin: 5px 0; border: 1px solid var(--border); border-radius: 3px; background: var(--item-bg); font-size: 0.9em; }
-        #enemy-name { font-size: 1.2em; } #enemy-hp { color: #ffcccb; }
-        #log { background: var(--log-bg); padding: 10px; height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 3px; margin-bottom: 15px; font-size: 0.85em; }
-        #log p { margin: 0 0 5px 0; border-bottom: 1px dashed #222; padding-bottom: 3px; }
-        #log p:last-child { border-bottom: none; }
-        .actions { margin-bottom: 15px; }
-        .btn {
-            display: block; width: calc(100% - 10px); padding: 12px 5px; font-size: 1em; font-family: inherit;
-            background: var(--btn-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px;
-            cursor: pointer; margin: 5px auto; transition: all 0.2s;
-        }
-        .btn:hover:not(:disabled) { background: var(--btn-hover); color: #fff; }
-        .btn:disabled { background: var(--btn-disabled); color: #555; cursor: not-allowed; }
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7);
-            z-index: 1000; justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: var(--container-bg); padding: 20px; border-radius: 5px; border: 1px solid var(--border);
-            text-align: center; width: 90%; max-width: 400px; box-shadow: 0 0 15px rgba(0,0,0,0.6);
-        }
-        .modal-content p { margin-bottom: 15px; font-size: 1.1em; }
-        .modal-actions { display: flex; justify-content: space-around; gap: 10px; }
-        .modal-actions .btn { width: 45%; margin: 5px 0; }
-        #confirm-purchase-button { background: #28a745; } #confirm-purchase-button:hover { background: #218838; }
-        #cancel-purchase-button { background: #dc3545; } #cancel-purchase-button:hover { background: #c82333; }
-        .corner-btn {
-            position: fixed; top: 10px; padding: 8px 12px; font-family: inherit; background: var(--btn-bg);
-            color: var(--text); border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
-            z-index: 999; font-size: 0.9em; transition: all 0.2s;
-        }
-        .corner-btn:hover { background: var(--btn-hover); color: #fff; }
-        #help-button { right: 10px; } #settings-button { left: 10px; }
-        #shortcuts-list ul { list-style: disc; padding-left: 30px; margin: 2px 0 12px; text-align: left; }
-        #shortcuts-list li, .settings-group li { margin-bottom: 8px; }
-        #shortcuts-list p > strong, .settings-group h3 { color: #61dafb; font-size: 1.05em; margin-bottom: 8px; }
-        #shortcuts-list hr { border: 0; border-top: 1px dashed #444; margin: 15px 0; }
-        .settings-group { margin-bottom: 20px; }
-        .settings-group ul { list-style: none; padding: 0; margin: 2px 0 12px; text-align: left; }
-        .settings-group label { margin-left: 5px; }
-        #game-over-screen { text-align: center; padding: 20px; background: rgba(0,0,0,0.8); border-radius: 5px; }
-        #game-over-screen h2 { color: #dc143c; }
-        .progress-container {
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            padding: 2px;
-            margin-top: 4px;
-            height: 20px;
-            position: relative;
-            overflow: hidden;
-            min-width: 120px;
-        }
-        .progress-bar {
-            height: 100%;
-            border-radius: 8px;
-            transition: width 0.5s ease, background-color 0.3s ease;
-            position: relative;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-            background-size: 30px 100%;
-            animation: shimmer 2s infinite;
-        }
-        .progress-bar.hp-bar {
-            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 50%, #e74c3c 100%);
-            box-shadow: 0 0 8px rgba(231, 76, 60, 0.5);
-        }
-        .progress-bar.hp-bar.low { background: linear-gradient(90deg, #e74c3c 0%, #8b0000 50%, #e74c3c 100%); }
-        .progress-bar.hp-bar.critical { 
-            background: linear-gradient(90deg, #ff0000 0%, #8b0000 50%, #ff0000 100%);
-            animation: pulse 0.5s infinite alternate, shimmer 2s infinite;
-        }
-        .progress-bar.mp-bar {
-            background: linear-gradient(90deg, #8e44ad 0%, #6c3483 50%, #8e44ad 100%);
-            box-shadow: 0 0 8px rgba(142, 68, 173, 0.5);
-        }
-        .progress-bar.mp-bar.low { background: linear-gradient(90deg, #6c3483 0%, #4a235a 50%, #6c3483 100%); }
-        .progress-bar.xp-bar {
-            background: linear-gradient(90deg, #3498db 0%, #2980b9 50%, #3498db 100%);
-            box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
-        }
-        @keyframes shimmer {
-            0% { background-position: -30px 0; }
-            100% { background-position: 100% 0; }
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.5); }
-            100% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.8); }
-        }
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 0 3px rgba(0,0,0,0.9), 1px 1px 2px rgba(0,0,0,0.8);
-            z-index: 1;
-            white-space: nowrap;
-            max-width: 95%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .stat-with-progress {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .stat-numbers {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Gradis' Dungeon Delver</h1>
-    <button id="settings-button" class="corner-btn">⚙️ Settings</button>
-    <button id="help-button" class="corner-btn">Help (?)</button>
-
-    <div class="container">
-        <h2>Player Stats</h2>
-        <div class="stats-grid">
-            <div>Level: <strong id="player-level">1</strong></div>
-            <div class="stat-with-progress">
-                <span>XP:</span>
-                <div class="progress-container">
-                    <div class="progress-bar xp-bar" id="xp-progress" style="width: 0%"></div>
-                    <div class="progress-text" id="xp-progress-text">0 / 100</div>
-                </div>
-            </div>
-            <div>Gold: <strong id="player-gold">0</strong></div>
-            <div>Base ATK: <strong id="player-base-attack">4</strong></div>
-            <div>Base DEF: <strong id="player-base-defense">1</strong></div>
-            <div class="stat-with-progress">
-                <span>MP:</span>
-                <div class="progress-container">
-                    <div class="progress-bar mp-bar" id="mp-progress" style="width: 100%"></div>
-                    <div class="progress-text" id="mp-progress-text">15 / 15</div>
-                </div>
-            </div>
-            <div>Total ATK: <strong id="player-total-attack">4</strong></div>
-            <div>Total DEF: <strong id="player-total-defense">1</strong></div>
-        </div>
-        <div class="stat-with-progress" style="margin-bottom: 15px;">
-            <span>HP:</span>
-            <div class="progress-container">
-                <div class="progress-bar hp-bar" id="hp-progress" style="width: 100%"></div>
-                <div class="progress-text" id="hp-progress-text">30 / 30</div>
-            </div>
-        </div>
-        <div class="equipment-grid">
-            <div>Weapon: <span id="player-weapon-name" class="item-name">Crude Club</span>
-                <span id="player-weapon-bonus" class="item-bonus">(+1 ATK)</span>
-                <span id="player-weapon-rarity" class="rarity-Common">[Common]</span></div>
-            <div>Armor: <span id="player-armor-name" class="item-name">Scavenged Hide</span>
-                <span id="player-armor-bonus" class="item-bonus">(+1 DEF)</span>
-                <span id="player-armor-rarity" class="rarity-Common">[Common]</span></div>
-            <div>Accessory: <span id="player-accessory-name" class="item-name">None</span>
-                <span id="player-accessory-bonus" class="item-bonus"></span>
-                <span id="player-accessory-rarity" class="rarity-Common"></span></div>
-        </div>
-    </div>
-
-    <div class="container" id="enemy-area" style="display: none">
-        <h2>Enemy</h2>
-        <div id="enemy-info"><span id="enemy-name"></span> (<span id="enemy-hp"></span> HP)</div>
-    </div>
-
-    <div class="container" id="merchant-area" style="display: none">
-        <h2 id="merchant-title">Wandering Merchant</h2>
-        <div id="merchant-offer-1" class="merchant-offer">Offer 1...</div>
-        <div id="merchant-offer-2" class="merchant-offer">Offer 2...</div>
-        <div class="merchant-actions">
-            <button id="buy-offer-1-button" class="btn">Buy Offer 1</button>
-            <button id="buy-offer-2-button" class="btn">Buy Offer 2</button>
-            <button id="leave-merchant-button" class="btn">Continue Exploring</button>
-        </div>
-    </div>
-
-    <div class="container actions">
-        <button id="explore-button" class="btn">Explore Dungeon</button>
-        <button id="attack-button" class="btn" style="display: none">Attack</button>
-        <button id="fireball-button" class="btn" style="display: none">Fireball (5 MP)</button>
-        <button id="potion-button" class="btn" style="display: none">Use Potion (<span id="potion-count-button">4</span>)</button>
-    </div>
-
-    <div class="container">
-        <div id="log"><p>Welcome to the Dungeon! Click "Explore" to begin.</p></div>
-    </div>
-
-    <div class="container" id="game-over-screen" style="display: none">
-        <h2 id="game-over-message">Game Over!</h2>
-        <button id="restart-button" class="btn">Restart Game</button>
-    </div>
-
-    <!-- Modals -->
-    <div id="purchase-confirmation-modal" class="modal">
-        <div class="modal-content">
-            <p id="confirmation-message">Are you sure you want to purchase this item?</p>
-            <div class="modal-actions">
-                <button id="confirm-purchase-button" class="btn">Confirm</button>
-                <button id="cancel-purchase-button" class="btn">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="help-modal" class="modal">
-        <div class="modal-content">
-            <h2>Keyboard Shortcuts</h2>
-            <div id="shortcuts-list" style="text-align: left; line-height: 1.6; margin-top: 10px; max-height: 60vh; overflow-y: auto;">
-                <p><strong>Enter:</strong></p>
-                <ul><li>Confirm Purchase (in confirmation pop-up)</li><li>Restart Game (on Game Over screen)</li><li>Explore Dungeon (when available)</li></ul>
-                <p><strong>Backspace:</strong></p>
-                <ul><li>Cancel Purchase (in confirmation pop-up)</li></ul>
-                <p><strong>Spacebar:</strong> Attack (in combat)</p>
-                <p><strong>F:</strong> Cast Fireball (in combat)</p>
-                <p><strong>P:</strong> Use Potion (in combat)</p>
-                <p><strong>1:</strong> Select/Buy Merchant Offer 1</p>
-                <p><strong>2:</strong> Select/Buy Merchant Offer 2</p>
-                <p><strong>3:</strong> Leave Merchant</p>
-                <hr>
-                <p><strong>Esc:</strong> Close this Help window / Cancel Purchase / Close Settings</p>
-            </div>
-            <div class="modal-actions" style="margin-top: 15px">
-                <button id="close-help-modal-button" class="btn">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h2>Settings</h2>
-            <div class="settings-group">
-                <h3>Number Display Format</h3>
-                <ul>
-                    <li><input type="radio" name="number-format" value="standard" id="format-standard" checked>
-                        <label for="format-standard">Standard (e.g., 1,234,567)</label></li>
-                    <li><input type="radio" name="number-format" value="shortened" id="format-shortened">
-                        <label for="format-shortened">Shortened (e.g., 1.23M)</label></li>
-                    <li><input type="radio" name="number-format" value="scientific" id="format-scientific">
-                        <label for="format-scientific">Scientific (e.g., 1.23e+6)</label></li>
-                </ul>
-            </div>
-            <div class="settings-group">
-                <h3>Theme</h3>
-                <ul>
-                    <li><input type="radio" name="theme-select" value="normal" id="theme-normal" checked>
-                        <label for="theme-normal">Normal (Dark)</label></li>
-                    <li><input type="radio" name="theme-select" value="light" id="theme-light">
-                        <label for="theme-light">Light</label></li>
-                </ul>
-            </div>
-            <div class="modal-actions" style="margin-top: 15px;">
-                <button id="close-settings-modal-button" class="btn">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
+    <script type="module">
         // Game constants and state
         const GAME_CONSTANTS = {
             LOG_MAX_ENTRIES: 40,
@@ -322,73 +13,73 @@
                 LEVEL: 1, XP: 0, XP_TO_NEXT_LEVEL: 65, CURRENT_HP: 25, MAX_HP: 25,
                 CURRENT_MP: 15, MAX_MP: 15, SHRINE_BUFF_REMAINING: 0,
                 BASE_ATTACK: 3, BASE_DEFENSE: 1, POTIONS: 5, MAX_POTIONS: 50, GOLD: 0,
-                DEFAULT_WEAPON: { name: "Old Stick", type: "weapon", bonus: 0, rarity: "Common", attackBonus: 0, defenseBonus: 0 },
-                DEFAULT_ARMOR: { name: "Torn Shirt", type: "armor", bonus: 0, rarity: "Common" }
+                DEFAULT_WEAPON: {name: "Old Stick", type: "weapon", bonus: 0, rarity: "Common", attackBonus: 0, defenseBonus: 0},
+                DEFAULT_ARMOR: {name: "Torn Shirt", type: "armor", bonus: 0, rarity: "Common"}
             },
             POTION_HEAL_BASE_PERCENT: 0.45, POTION_HEAL_LEVEL_MULTIPLIER: 0.001,
             PLAYER_BASE_CRIT_CHANCE: 0.05, PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER: 0.003,
             PLAYER_BASE_CRIT_DAMAGE_MULTIPLIER: 1.75, PLAYER_CRIT_DAMAGE_LEVEL_MULTIPLIER: 0.005,
             ENEMY_BASE_CRIT_CHANCE: 0.12, ENEMY_CRIT_CHANCE_LEVEL_MULTIPLIER: 0.0005,
             ENEMY_BASE_CRIT_DAMAGE_MULTIPLIER: 1.5, ENEMY_CRIT_DAMAGE_LEVEL_MULTIPLIER: 0.002,
-            EXPLORE_EVENT_THRESHOLDS: { LOST_COLLECTOR: 0.02, POTION_CRATE: 0.08, MERCHANT: 0.18, MAGIC_SHRINE: 0.25, STRAY_POTION: 0.35, BLACKSMITH: 0.45, REST_HOUSE: 0.55 },
-            ELITE_MODIFIERS: { HP_MULTIPLIER: 1.75, ATK_MULTIPLIER: 1.4, DEF_MULTIPLIER: 1.4, XP_MULTIPLIER: 2.5, GOLD_MULTIPLIER: 2, LOOT_CHANCE_MULTIPLIER: 1.5, SPAWN_MIN_PLAYER_LEVEL: 15, SPAWN_CHANCE: 0.15 }
+            EXPLORE_EVENT_THRESHOLDS: {LOST_COLLECTOR: 0.02, POTION_CRATE: 0.08, MERCHANT: 0.18, MAGIC_SHRINE: 0.25, STRAY_POTION: 0.35, BLACKSMITH: 0.45, REST_HOUSE: 0.55},
+            ELITE_MODIFIERS: {HP_MULTIPLIER: 1.75, ATK_MULTIPLIER: 1.4, DEF_MULTIPLIER: 1.4, XP_MULTIPLIER: 2.5, GOLD_MULTIPLIER: 2, LOOT_CHANCE_MULTIPLIER: 1.5, SPAWN_MIN_PLAYER_LEVEL: 15, SPAWN_CHANCE: 0.15}
         };
 
-        let gameSettings = { numberFormat: 'standard', theme: 'normal' };
+        let gameSettings = {numberFormat: 'standard', theme: 'normal'};
         let player, currentEnemy = null, inCombat = false, firstEncounter = true, inMerchantEncounter = false;
         let currentMerchantOffers = [], pendingPurchaseAction = null;
 
         // Data structures (keeping original for compatibility)
         const accessories = [
-            { name: "Worn Locket", type: "accessory", rarity: "Common", bonuses: { flatHp: 5 }, cost: 75, description: "+5 Max HP" },
-            { name: "Cracked Ring", type: "accessory", rarity: "Common", bonuses: { flatDefense: 1 }, cost: 90, description: "+1 DEF" },
-            { name: "Lucky Charm", type: "accessory", rarity: "Uncommon", bonuses: { goldFind: 0.05 }, cost: 200, description: "+5.0% Gold Find" },
-            { name: "Apprentice's Ring", type: "accessory", rarity: "Uncommon", bonuses: { flatAttack: 2 }, cost: 220, description: "+2 ATK" },
-            { name: "Padded Belt", type: "accessory", rarity: "Uncommon", bonuses: { flatHp: 12, flatDefense: 1 }, cost: 250, description: "+12 Max HP, +1 DEF" },
-            { name: "Scholar's Monocle", type: "accessory", rarity: "Rare", bonuses: { xpGain: 0.07 }, cost: 500, description: "+7.0% XP Gain" },
-            { name: "Adept's Band", type: "accessory", rarity: "Rare", bonuses: { critChance: 0.03 }, cost: 600, description: "+3.0% Crit Chance" },
-            { name: "Berserker's Bracer", type: "accessory", rarity: "Rare", bonuses: { flatAttack: 3, critDamage: 0.05 }, cost: 750, description: "+3 ATK, +5.0% Crit DMG" },
-            { name: "Ring of Profiteering", type: "accessory", rarity: "Epic", bonuses: { goldFind: 0.12, merchantDiscount: 0.05 }, cost: 1500, description: "+12.0% Gold Find, 5.0% Merchant Discount" },
-            { name: "Shadowfang Pendant", type: "accessory", rarity: "Epic", bonuses: { critChance: 0.05, critDamage: 0.1 }, cost: 1800, description: "+5.0% Crit Chance, +10.0% Crit DMG" },
-            { name: "Guardian's Sigil", type: "accessory", rarity: "Epic", bonuses: { flatHp: 30, flatDefense: 5, potionEffectiveness: 0.1 }, cost: 2000, description: "+30 Max HP, +5 DEF, +10.0% Potion Heal" }
+            {name: "Worn Locket", type: "accessory", rarity: "Common", bonuses: {flatHp: 5}, cost: 75, description: "+5 Max HP"},
+            {name: "Cracked Ring", type: "accessory", rarity: "Common", bonuses: {flatDefense: 1}, cost: 90, description: "+1 DEF"},
+            {name: "Lucky Charm", type: "accessory", rarity: "Uncommon", bonuses: {goldFind: 0.05}, cost: 200, description: "+5.0% Gold Find"},
+            {name: "Apprentice's Ring", type: "accessory", rarity: "Uncommon", bonuses: {flatAttack: 2}, cost: 220, description: "+2 ATK"},
+            {name: "Padded Belt", type: "accessory", rarity: "Uncommon", bonuses: {flatHp: 12, flatDefense: 1}, cost: 250, description: "+12 Max HP, +1 DEF"},
+            {name: "Scholar's Monocle", type: "accessory", rarity: "Rare", bonuses: {xpGain: 0.07}, cost: 500, description: "+7.0% XP Gain"},
+            {name: "Adept's Band", type: "accessory", rarity: "Rare", bonuses: {critChance: 0.03}, cost: 600, description: "+3.0% Crit Chance"},
+            {name: "Berserker's Bracer", type: "accessory", rarity: "Rare", bonuses: {flatAttack: 3, critDamage: 0.05}, cost: 750, description: "+3 ATK, +5.0% Crit DMG"},
+            {name: "Ring of Profiteering", type: "accessory", rarity: "Epic", bonuses: {goldFind: 0.12, merchantDiscount: 0.05}, cost: 1500, description: "+12.0% Gold Find, 5.0% Merchant Discount"},
+            {name: "Shadowfang Pendant", type: "accessory", rarity: "Epic", bonuses: {critChance: 0.05, critDamage: 0.1}, cost: 1800, description: "+5.0% Crit Chance, +10.0% Crit DMG"},
+            {name: "Guardian's Sigil", type: "accessory", rarity: "Epic", bonuses: {flatHp: 30, flatDefense: 5, potionEffectiveness: 0.1}, cost: 2000, description: "+30 Max HP, +5 DEF, +10.0% Potion Heal"}
         ];
 
         const enemies = [
-            { name: "Slime", baseHp: 10, baseAttack: 5, baseDefense: 0, xpYield: 12, goldDropRange: [8, 15], lootTable: [{ type: "armor", chance: 0.4, rarities: ["Common"] }], potionDropChance: 0.15 },
-            { name: "Bat", baseHp: 8, baseAttack: 6, baseDefense: 0, xpYield: 10, goldDropRange: [6, 12], lootTable: [{ type: "weapon", chance: 0.25, rarities: ["Common"] }], potionDropChance: 0.12 },
-            { name: "Skeleton", baseHp: 20, baseAttack: 8, baseDefense: 1, xpYield: 25, goldDropRange: [15, 25], lootTable: [{ type: "weapon", chance: 0.6, rarities: ["Common"] }, { type: "armor", chance: 0.4, rarities: ["Common"] }], potionDropChance: 0.25 },
-            { name: "Goblin Grunt", baseHp: 20, baseAttack: 5, baseDefense: 0, xpYield: 30, goldDropRange: [18, 28], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Common"] }, { type: "accessory", chance: 0.15, rarities: ["Common"] }], potionDropChance: 0.4 },
-            { name: "Cave Spider", baseHp: 18, baseAttack: 9, baseDefense: 0, xpYield: 35, goldDropRange: [20, 35], lootTable: [{ type: "weapon", chance: 0.65, rarities: ["Common", "Uncommon"] }], potionDropChance: 0.35 },
-            { name: "Orc Scout", baseHp: 45, baseAttack: 13, baseDefense: 2, xpYield: 60, goldDropRange: [30, 50], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Common", "Uncommon"] }, { type: "accessory", chance: 0.2, rarities: ["Common", "Uncommon"] }], potionDropChance: 0.38 },
-            { name: "Dire Wolf", baseHp: 55, baseAttack: 18, baseDefense: 2, xpYield: 75, goldDropRange: [40, 65], lootTable: [{ type: "weapon", chance: 0.75, rarities: ["Uncommon", "Rare"] }], potionDropChance: 0.32 },
-            { name: "Stone Golem", baseHp: 120, baseAttack: 20, baseDefense: 8, xpYield: 130, goldDropRange: [60, 100], lootTable: [{ type: "weapon", chance: 0.7, rarities: ["Rare", "Epic"] }, { type: "accessory", chance: 0.25, rarities: ["Uncommon", "Rare"] }], potionDropChance: 0.28 },
-            { name: "Ogre Brute", baseHp: 150, baseAttack: 25, baseDefense: 7, xpYield: 160, goldDropRange: [75, 120], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Uncommon", "Rare", "Epic"] }], potionDropChance: 0.28 },
-            { name: "Deep Goblin Shaman", baseHp: 100, baseAttack: 28, baseDefense: 3, xpYield: 150, goldDropRange: [80, 130], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Uncommon", "Rare", "Epic"] }, { type: "accessory", chance: 0.3, rarities: ["Rare", "Epic"] }], potionDropChance: 0.42 },
-            { name: "Minotaur Charger", baseHp: 220, baseAttack: 42, baseDefense: 12, xpYield: 380, goldDropRange: [150, 250], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Rare", "Epic", "Legendary"] }, { type: "accessory", chance: 0.35, rarities: ["Rare", "Epic"] }], potionDropChance: 0.33 },
-            { name: "Wraith", baseHp: 180, baseAttack: 48, baseDefense: 8, xpYield: 350, goldDropRange: [170, 280], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Rare", "Epic", "Legendary"] }, { type: "accessory", chance: 0.3, rarities: ["Epic", "Legendary"] }], potionDropChance: 0.28 },
-            { name: "Dread Knight", baseHp: 380, baseAttack: 50, baseDefense: 25, xpYield: 700, goldDropRange: [300, 500], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Epic", "Legendary", "Mythic"] }], potionDropChance: 0.48 },
-            { name: "Nether Sorcerer", baseHp: 320, baseAttack: 60, baseDefense: 15, xpYield: 650, goldDropRange: [330, 550], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Epic", "Legendary", "Mythic"] }], potionDropChance: 0.43 },
-            { name: "Abyssal Behemoth", baseHp: 600, baseAttack: 65, baseDefense: 35, xpYield: 1200, goldDropRange: [400, 670], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Legendary", "Mythic", "Divine"] }], potionDropChance: 0.58 },
-            { name: "Aspect of Shadow", baseHp: 480, baseAttack: 80, baseDefense: 22, xpYield: 1150, goldDropRange: [430, 700], lootTable: [{ type: "weapon", chance: 0.8, rarities: ["Legendary", "Mythic", "Divine"] }], potionDropChance: 0.48 },
-            { name: "Infernal Juggernaut", baseHp: 850, baseAttack: 85, baseDefense: 42, xpYield: 2000, goldDropRange: [600, 1000], lootTable: [{ type: "weapon", chance: 0.85, rarities: ["Mythic", "Divine", "Eternal"] }], potionDropChance: 0.68 },
-            { name: "Celestial Paladin", baseHp: 2000, baseAttack: 95, baseDefense: 65, xpYield: 7500, goldDropRange: [1400, 2400], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.78 },
-            { name: "Void Ascendant", baseHp: 1100, baseAttack: 110, baseDefense: 45, xpYield: 6800, goldDropRange: [1700, 2900], lootTable: [{ type: "weapon", chance: 0.9, rarities: ["Divine", "Eternal", "Immortal"] }], potionDropChance: 0.78 },
-            { name: "Reality Sculptor", baseHp: 3200, baseAttack: 135, baseDefense: 75, xpYield: 14500, goldDropRange: [2400, 3900], lootTable: [{ type: "weapon", chance: 1.0, rarities: ["Eternal", "Immortal", "Transcendent"] }], potionDropChance: 0.88 },
-            { name: "The Nether Tyrant", baseHp: 3500, baseAttack: 140, baseDefense: 60, xpYield: 15000, isFinalBoss: true, goldDropRange: [3000, 5500], lootTable: [] },
-            { name: "Lost Collector", isSpecial: true, baseHp: 75, baseAttack: 1, baseDefense: 5, xpYield: 200, goldDropRange: [500, 1000], lootTable: [], potionDropChance: 0.25 }
+            {name: "Slime", baseHp: 10, baseAttack: 5, baseDefense: 0, xpYield: 12, goldDropRange: [8, 15], lootTable: [{type: "armor", chance: 0.4, rarities: ["Common"]}], potionDropChance: 0.15},
+            {name: "Bat", baseHp: 8, baseAttack: 6, baseDefense: 0, xpYield: 10, goldDropRange: [6, 12], lootTable: [{type: "weapon", chance: 0.25, rarities: ["Common"]}], potionDropChance: 0.12},
+            {name: "Skeleton", baseHp: 20, baseAttack: 8, baseDefense: 1, xpYield: 25, goldDropRange: [15, 25], lootTable: [{type: "weapon", chance: 0.6, rarities: ["Common"]}, {type: "armor", chance: 0.4, rarities: ["Common"]}], potionDropChance: 0.25},
+            {name: "Goblin Grunt", baseHp: 20, baseAttack: 5, baseDefense: 0, xpYield: 30, goldDropRange: [18, 28], lootTable: [{type: "weapon", chance: 0.7, rarities: ["Common"]}, {type: "accessory", chance: 0.15, rarities: ["Common"]}], potionDropChance: 0.4},
+            {name: "Cave Spider", baseHp: 18, baseAttack: 9, baseDefense: 0, xpYield: 35, goldDropRange: [20, 35], lootTable: [{type: "weapon", chance: 0.65, rarities: ["Common", "Uncommon"]}], potionDropChance: 0.35},
+            {name: "Orc Scout", baseHp: 45, baseAttack: 13, baseDefense: 2, xpYield: 60, goldDropRange: [30, 50], lootTable: [{type: "weapon", chance: 0.8, rarities: ["Common", "Uncommon"]}, {type: "accessory", chance: 0.2, rarities: ["Common", "Uncommon"]}], potionDropChance: 0.38},
+            {name: "Dire Wolf", baseHp: 55, baseAttack: 18, baseDefense: 2, xpYield: 75, goldDropRange: [40, 65], lootTable: [{type: "weapon", chance: 0.75, rarities: ["Uncommon", "Rare"]}], potionDropChance: 0.32},
+            {name: "Stone Golem", baseHp: 120, baseAttack: 20, baseDefense: 8, xpYield: 130, goldDropRange: [60, 100], lootTable: [{type: "weapon", chance: 0.7, rarities: ["Rare", "Epic"]}, {type: "accessory", chance: 0.25, rarities: ["Uncommon", "Rare"]}], potionDropChance: 0.28},
+            {name: "Ogre Brute", baseHp: 150, baseAttack: 25, baseDefense: 7, xpYield: 160, goldDropRange: [75, 120], lootTable: [{type: "weapon", chance: 0.85, rarities: ["Uncommon", "Rare", "Epic"]}], potionDropChance: 0.28},
+            {name: "Deep Goblin Shaman", baseHp: 100, baseAttack: 28, baseDefense: 3, xpYield: 150, goldDropRange: [80, 130], lootTable: [{type: "weapon", chance: 0.8, rarities: ["Uncommon", "Rare", "Epic"]}, {type: "accessory", chance: 0.3, rarities: ["Rare", "Epic"]}], potionDropChance: 0.42},
+            {name: "Minotaur Charger", baseHp: 220, baseAttack: 42, baseDefense: 12, xpYield: 380, goldDropRange: [150, 250], lootTable: [{type: "weapon", chance: 0.9, rarities: ["Rare", "Epic", "Legendary"]}, {type: "accessory", chance: 0.35, rarities: ["Rare", "Epic"]}], potionDropChance: 0.33},
+            {name: "Wraith", baseHp: 180, baseAttack: 48, baseDefense: 8, xpYield: 350, goldDropRange: [170, 280], lootTable: [{type: "weapon", chance: 0.85, rarities: ["Rare", "Epic", "Legendary"]}, {type: "accessory", chance: 0.3, rarities: ["Epic", "Legendary"]}], potionDropChance: 0.28},
+            {name: "Dread Knight", baseHp: 380, baseAttack: 50, baseDefense: 25, xpYield: 700, goldDropRange: [300, 500], lootTable: [{type: "weapon", chance: 0.85, rarities: ["Epic", "Legendary", "Mythic"]}], potionDropChance: 0.48},
+            {name: "Nether Sorcerer", baseHp: 320, baseAttack: 60, baseDefense: 15, xpYield: 650, goldDropRange: [330, 550], lootTable: [{type: "weapon", chance: 0.85, rarities: ["Epic", "Legendary", "Mythic"]}], potionDropChance: 0.43},
+            {name: "Abyssal Behemoth", baseHp: 600, baseAttack: 65, baseDefense: 35, xpYield: 1200, goldDropRange: [400, 670], lootTable: [{type: "weapon", chance: 0.8, rarities: ["Legendary", "Mythic", "Divine"]}], potionDropChance: 0.58},
+            {name: "Aspect of Shadow", baseHp: 480, baseAttack: 80, baseDefense: 22, xpYield: 1150, goldDropRange: [430, 700], lootTable: [{type: "weapon", chance: 0.8, rarities: ["Legendary", "Mythic", "Divine"]}], potionDropChance: 0.48},
+            {name: "Infernal Juggernaut", baseHp: 850, baseAttack: 85, baseDefense: 42, xpYield: 2000, goldDropRange: [600, 1000], lootTable: [{type: "weapon", chance: 0.85, rarities: ["Mythic", "Divine", "Eternal"]}], potionDropChance: 0.68},
+            {name: "Celestial Paladin", baseHp: 2000, baseAttack: 95, baseDefense: 65, xpYield: 7500, goldDropRange: [1400, 2400], lootTable: [{type: "weapon", chance: 0.9, rarities: ["Divine", "Eternal", "Immortal"]}], potionDropChance: 0.78},
+            {name: "Void Ascendant", baseHp: 1100, baseAttack: 110, baseDefense: 45, xpYield: 6800, goldDropRange: [1700, 2900], lootTable: [{type: "weapon", chance: 0.9, rarities: ["Divine", "Eternal", "Immortal"]}], potionDropChance: 0.78},
+            {name: "Reality Sculptor", baseHp: 3200, baseAttack: 135, baseDefense: 75, xpYield: 14500, goldDropRange: [2400, 3900], lootTable: [{type: "weapon", chance: 1.0, rarities: ["Eternal", "Immortal", "Transcendent"]}], potionDropChance: 0.88},
+            {name: "The Nether Tyrant", baseHp: 3500, baseAttack: 140, baseDefense: 60, xpYield: 15000, isFinalBoss: true, goldDropRange: [3000, 5500], lootTable: []},
+            {name: "Lost Collector", isSpecial: true, baseHp: 75, baseAttack: 1, baseDefense: 5, xpYield: 200, goldDropRange: [500, 1000], lootTable: [], potionDropChance: 0.25}
         ];
 
         const itemStatsByRarity = {
-            Common: { weaponBonus: [1, 3], armorBonus: [1, 3], namePrefixes: ["Rusty", "Worn", "Basic", "Crude", "Simple"] },
-            Uncommon: { weaponBonus: [4, 7], armorBonus: [4, 7], namePrefixes: ["Decent", "Polished", "Sturdy", "Fine", "Soldier's"] },
-            Rare: { weaponBonus: [8, 12], armorBonus: [8, 12], namePrefixes: ["Superior", "Engraved", "Reinforced", "Knight's", "Adept's"] },
-            Epic: { weaponBonus: [13, 18], armorBonus: [13, 18], namePrefixes: ["Epic", "Masterwork", "Exquisite", "Champion's", "Heroic"] },
-            Legendary: { weaponBonus: [19, 25], armorBonus: [19, 25], namePrefixes: ["Legendary", "Fabled", "Artifact", "Dragon's", "Titan's"] },
-            Mythic: { weaponBonus: [26, 35], armorBonus: [26, 35], namePrefixes: ["Mythic", "Primordial", "Void-Touched", "Archon's", "Sovereign"] },
-            Divine: { weaponBonus: [36, 49], armorBonus: [36, 49], namePrefixes: ["Divine", "Blessed", "Sacred", "Angelic", "Hallowed"] },
-            Eternal: { weaponBonus: [50, 64], armorBonus: [50, 64], namePrefixes: ["Eternal", "Timeless", "Cosmic", "Starforged", "Infinite"] },
-            Immortal: { weaponBonus: [65, 80], armorBonus: [65, 80], namePrefixes: ["Immortal", "God-Slayer's", "Unending", "Reality-Render's", "Apex"] },
-            Transcendent: { weaponBonus: [90, 110], armorBonus: [90, 110], namePrefixes: ["Transcendent", "Unfathomable", "Beyond", "Perfected", "Singularity's"] }
+            Common: {weaponBonus: [1, 3], armorBonus: [1, 3], namePrefixes: ["Rusty", "Worn", "Basic", "Crude", "Simple"]},
+            Uncommon: {weaponBonus: [4, 7], armorBonus: [4, 7], namePrefixes: ["Decent", "Polished", "Sturdy", "Fine", "Soldier's"]},
+            Rare: {weaponBonus: [8, 12], armorBonus: [8, 12], namePrefixes: ["Superior", "Engraved", "Reinforced", "Knight's", "Adept's"]},
+            Epic: {weaponBonus: [13, 18], armorBonus: [13, 18], namePrefixes: ["Epic", "Masterwork", "Exquisite", "Champion's", "Heroic"]},
+            Legendary: {weaponBonus: [19, 25], armorBonus: [19, 25], namePrefixes: ["Legendary", "Fabled", "Artifact", "Dragon's", "Titan's"]},
+            Mythic: {weaponBonus: [26, 35], armorBonus: [26, 35], namePrefixes: ["Mythic", "Primordial", "Void-Touched", "Archon's", "Sovereign"]},
+            Divine: {weaponBonus: [36, 49], armorBonus: [36, 49], namePrefixes: ["Divine", "Blessed", "Sacred", "Angelic", "Hallowed"]},
+            Eternal: {weaponBonus: [50, 64], armorBonus: [50, 64], namePrefixes: ["Eternal", "Timeless", "Cosmic", "Starforged", "Infinite"]},
+            Immortal: {weaponBonus: [65, 80], armorBonus: [65, 80], namePrefixes: ["Immortal", "God-Slayer's", "Unending", "Reality-Render's", "Apex"]},
+            Transcendent: {weaponBonus: [90, 110], armorBonus: [90, 110], namePrefixes: ["Transcendent", "Unfathomable", "Beyond", "Perfected", "Singularity's"]}
         };
 
         const baseItemTypes = {
@@ -425,7 +116,7 @@
         const gameOverScreenEl = document.getElementById("game-over-screen");
         const gameOverMessageEl = document.getElementById("game-over-message");
         const restartButton = document.getElementById("restart-button");
-        
+
         // Progress bar elements
         const hpProgressEl = document.getElementById("hp-progress");
         const hpProgressTextEl = document.getElementById("hp-progress-text");
@@ -435,7 +126,7 @@
         const xpProgressTextEl = document.getElementById("xp-progress-text");
 
         // Number formatting functions
-        function formatStandard(number) { return number.toLocaleString(); }
+        function formatStandard(number) {return number.toLocaleString();}
         function formatShortened(number) {
             if (number < 1000) return number.toString();
             const suffixes = ["", "K", "M", "B", "T", "Q", "Qt", "Sx", "Sp"];
@@ -444,7 +135,7 @@
             const numStr = (number / Math.pow(1000, i)).toFixed(2);
             return numStr.replace(/\.00$/, '').replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') + suffixes[i];
         }
-        function formatScientific(number) { return number.toExponential(2); }
+        function formatScientific(number) {return number.toExponential(2);}
         function formatNumber(number) {
             switch (gameSettings.numberFormat) {
                 case 'shortened': return formatShortened(number);
@@ -500,12 +191,12 @@
             if (!accessory) {
                 return;
             }
-            
+
             if (accessory.name === "None" || !accessory.bonuses || Object.keys(accessory.bonuses).length === 0) {
                 accessory.description = "No bonus";
                 return;
             }
-            
+
             let parts = [];
             for (const key in accessory.bonuses) {
                 const value = accessory.bonuses[key];
@@ -539,7 +230,7 @@
             const hpPercentage = (player.currentHp / player.maxHp) * 100;
             hpProgressEl.style.width = `${hpPercentage}%`;
             hpProgressTextEl.textContent = `${formatNumber(player.currentHp)} / ${formatNumber(player.maxHp)}`;
-            
+
             // Add visual states for HP
             hpProgressEl.className = "progress-bar hp-bar";
             if (hpPercentage <= 25) {
@@ -552,7 +243,7 @@
             const mpPercentage = (player.currentMp / player.maxMp) * 100;
             mpProgressEl.style.width = `${mpPercentage}%`;
             mpProgressTextEl.textContent = `${formatNumber(player.currentMp)} / ${formatNumber(player.maxMp)}`;
-            
+
             // Add visual states for MP
             mpProgressEl.className = "progress-bar mp-bar";
             if (mpPercentage <= 25) {
@@ -574,7 +265,7 @@
 
             const accessoryAttackBonus = (acc.bonuses && acc.bonuses.flatAttack) || 0;
             const accessoryDefenseBonus = (acc.bonuses && acc.bonuses.flatDefense) || 0;
-            
+
             const totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
             const totalDefense = player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + accessoryDefenseBonus;
             playerTotalAttackEl.textContent = formatNumber(totalAttack);
@@ -637,7 +328,7 @@
                 const accessoryPool = accessories.filter(acc => possibleRarities.includes(acc.rarity));
                 if (accessoryPool.length > 0) {
                     const chosenAccessory = accessoryPool[Math.floor(Math.random() * accessoryPool.length)];
-                    const accessoryCopy = { ...chosenAccessory };
+                    const accessoryCopy = {...chosenAccessory};
                     // Ensure bonuses object exists
                     if (!accessoryCopy.bonuses) accessoryCopy.bonuses = {};
                     // Update description
@@ -645,7 +336,7 @@
                     return accessoryCopy;
                 }
                 // Fallback to a basic accessory if no match
-                const fallbackAccessory = { ...accessories[0] };
+                const fallbackAccessory = {...accessories[0]};
                 if (!fallbackAccessory.bonuses) fallbackAccessory.bonuses = {};
                 updateAccessoryDescription(fallbackAccessory);
                 return fallbackAccessory;
@@ -672,7 +363,7 @@
         function spawnEnemy() {
             let enemyTemplate;
             let enemyPool = [];
-            
+
             if (firstEncounter) {
                 firstEncounter = false;
                 enemyTemplate = enemies.find(e => e.name === "Goblin Grunt");
@@ -713,18 +404,18 @@
                         if (finalBoss) enemyPool.push(finalBoss);
                     }
                 }
-                
+
                 // Fallback to basic enemies if pool is empty
                 if (enemyPool.length === 0) {
                     enemyPool = enemies.filter(e => ["Slime", "Bat", "Goblin Grunt", "Skeleton"].includes(e.name));
                 }
-                
+
                 enemyTemplate = enemyPool[Math.floor(Math.random() * enemyPool.length)];
             }
 
-            const isElite = player.level >= GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_MIN_PLAYER_LEVEL && 
-                           !enemyTemplate.isSpecial && !enemyTemplate.isFinalBoss && 
-                           Math.random() < GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_CHANCE;
+            const isElite = player.level >= GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_MIN_PLAYER_LEVEL &&
+                !enemyTemplate.isSpecial && !enemyTemplate.isFinalBoss &&
+                Math.random() < GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_CHANCE;
 
             let baseHp = enemyTemplate.baseHp || 20;
             let baseAttack = enemyTemplate.baseAttack || 5;
@@ -813,7 +504,7 @@
             if (newItem.type === "weapon") {
                 const newWeaponEffectiveAttack = (newItem.attackBonus || 0) + (newItem.bonus && !(newItem.attackBonus > 0 && newItem.defenseBonus > 0) ? newItem.bonus : 0);
                 const currentWeaponEffectiveAttack = (player.weapon.attackBonus || 0) + (player.weapon.bonus && !(player.weapon.attackBonus > 0 && player.weapon.defenseBonus > 0) ? player.weapon.bonus : 0);
-                
+
                 if (newWeaponEffectiveAttack > currentWeaponEffectiveAttack) {
                     player.weapon = newItem;
                     addLog(`Equipped new weapon: <span class="rarity-${newItem.rarity}">${newItem.name}</span>!`);
@@ -830,13 +521,13 @@
                 const oldAccessory = player.accessory;
                 const oldHpBonus = (oldAccessory && oldAccessory.bonuses && oldAccessory.bonuses.flatHp) || 0;
                 const newHpBonus = (newItem.bonuses && newItem.bonuses.flatHp) || 0;
-                
+
                 // For accessories, always offer to equip (player decides if it's better)
                 if (player.accessory.name === "None" || newItem.cost > (player.accessory.cost || 0)) {
                     // Ensure the new accessory has proper structure
                     if (!newItem.bonuses) newItem.bonuses = {};
                     if (!newItem.description) updateAccessoryDescription(newItem);
-                    
+
                     // Update HP if there's a difference in HP bonuses
                     const hpDifference = newHpBonus - oldHpBonus;
                     if (hpDifference !== 0) {
@@ -850,7 +541,7 @@
                             player.currentHp = Math.min(player.currentHp, player.maxHp);
                         }
                     }
-                    
+
                     player.accessory = newItem;
                     addLog(`Equipped new accessory: <span class="rarity-${newItem.rarity}">${newItem.name}</span>!`);
                     equipped = true;
@@ -903,18 +594,18 @@
             const INIT_STATS = GAME_CONSTANTS.INITIAL_PLAYER_STATS;
             player = {
                 level: INIT_STATS.LEVEL, xp: INIT_STATS.XP, xpToNextLevel: INIT_STATS.XP_TO_NEXT_LEVEL,
-                currentHp: INIT_STATS.CURRENT_HP, maxHp: INIT_STATS.MAX_HP, 
+                currentHp: INIT_STATS.CURRENT_HP, maxHp: INIT_STATS.MAX_HP,
                 currentMp: INIT_STATS.CURRENT_MP, maxMp: INIT_STATS.MAX_MP,
-                baseAttack: INIT_STATS.BASE_ATTACK, baseDefense: INIT_STATS.BASE_DEFENSE, 
+                baseAttack: INIT_STATS.BASE_ATTACK, baseDefense: INIT_STATS.BASE_DEFENSE,
                 potions: INIT_STATS.POTIONS, maxPotions: INIT_STATS.MAX_POTIONS,
                 gold: INIT_STATS.GOLD, isDefending: false, shrineBuffRemaining: INIT_STATS.SHRINE_BUFF_REMAINING,
-                weapon: { ...INIT_STATS.DEFAULT_WEAPON },
-                armor: { ...INIT_STATS.DEFAULT_ARMOR }, 
-                accessory: { 
-                    name: "None", 
-                    type: "accessory", 
-                    rarity: "Common", 
-                    description: "No bonus", 
+                weapon: {...INIT_STATS.DEFAULT_WEAPON},
+                armor: {...INIT_STATS.DEFAULT_ARMOR},
+                accessory: {
+                    name: "None",
+                    type: "accessory",
+                    rarity: "Common",
+                    description: "No bonus",
                     bonuses: {},
                     cost: 0
                 }
@@ -942,11 +633,11 @@
             player.currentHp = player.maxHp;
             player.currentMp = player.maxMp;
             addLog("You stumble across a welcoming house and rest for a while. <strong>Your HP and MP have been fully restored!</strong>");
-            
+
             const houseLootRoll = Math.random();
             let itemRarity;
             const itemType = Math.random() < 0.5 ? "weapon" : "armor";
-            
+
             if (player.level < 5) {
                 if (houseLootRoll < 0.05) itemRarity = "Uncommon";
                 else if (houseLootRoll < 0.3) itemRarity = "Common";
@@ -971,7 +662,7 @@
                 else if (houseLootRoll < 0.55) itemRarity = "Mythic";
                 else if (houseLootRoll < 0.95) itemRarity = "Legendary";
             }
-            
+
             if (itemRarity) {
                 const item = generateItem(itemType, [itemRarity]);
                 let itemBonusText = `+${formatNumber(item.bonus)} ${item.type === "weapon" ? "ATK" : "DEF"}`;
@@ -988,7 +679,7 @@
             addLog("You find a makeshift forge! A friendly blacksmith offers to temper your gear.");
             const upgradeChoice = Math.random();
             const upgradeAmount = Math.floor(Math.random() * 3) + 1; // 1-3 upgrade
-            
+
             if (upgradeChoice < 0.4) {
                 // Upgrade weapon
                 player.weapon.bonus += upgradeAmount;
@@ -1003,7 +694,7 @@
                     const bonusKeys = Object.keys(player.accessory.bonuses);
                     const chosenBonusKey = bonusKeys[Math.floor(Math.random() * bonusKeys.length)];
                     const percentageBonusKeys = ["goldFind", "xpGain", "critChance", "critDamage", "merchantDiscount", "potionEffectiveness"];
-                    
+
                     if (percentageBonusKeys.includes(chosenBonusKey)) {
                         const actualUpgradeValue = upgradeAmount * 0.01;
                         player.accessory.bonuses[chosenBonusKey] = parseFloat((player.accessory.bonuses[chosenBonusKey] + actualUpgradeValue).toFixed(4));
@@ -1028,7 +719,7 @@
             const potionsFound = 4 + Math.floor(Math.random() * 5); // 4-8 potions (was 3-6)
             const potionsCanTake = player.maxPotions - player.potions;
             const potionsTaken = Math.min(potionsFound, potionsCanTake);
-            
+
             if (potionsTaken > 0) {
                 player.potions += potionsTaken;
                 addLog(`You find <strong>${formatNumber(potionsTaken)} Healing Potion${potionsTaken > 1 ? "s" : ""}</strong> inside!`);
@@ -1064,10 +755,10 @@
 
         function encounterMerchant() {
             addLog("You encounter a peculiar Wandering Merchant!");
-            
+
             // Generate simple merchant offers
             const offers = [];
-            
+
             // Offer 1: Healing Potion
             const potionCost = Math.floor(10 + player.level * 1.5 + player.maxHp * 0.03);
             offers.push({
@@ -1086,7 +777,7 @@
                     }
                 }
             });
-            
+
             // Offer 2: Random gear or accessory
             let gearRarity;
             const r = Math.random();
@@ -1095,7 +786,7 @@
             else if (player.level <= 15) gearRarity = r < 0.5 ? "Rare" : "Epic";
             else if (player.level <= 20) gearRarity = r < 0.5 ? "Epic" : "Legendary";
             else gearRarity = r < 0.5 ? "Legendary" : "Mythic";
-            
+
             // 33% chance for accessory, 67% for weapon/armor
             const itemTypeRoll = Math.random();
             let itemType;
@@ -1104,24 +795,24 @@
             } else {
                 itemType = Math.random() < 0.5 ? "weapon" : "armor";
             }
-            
+
             const merchantItem = generateItem(itemType, [gearRarity]);
             let itemCost;
-            
+
             if (itemType === "accessory") {
                 // Use the accessory's predefined cost, adjusted for level
                 itemCost = Math.floor(merchantItem.cost * (1 + player.level * 0.1));
             } else {
                 itemCost = Math.floor((merchantItem.bonus + 5) * (player.level + 5) * 2);
             }
-            
+
             let itemDisplayText;
             if (itemType === "accessory") {
                 itemDisplayText = `<span class="rarity-${merchantItem.rarity}">${merchantItem.name}</span> (${merchantItem.description})`;
             } else {
                 itemDisplayText = `<span class="rarity-${merchantItem.rarity}">${merchantItem.name}</span> (+${formatNumber(merchantItem.bonus)} ${merchantItem.type === "weapon" ? "ATK" : "DEF"})`;
             }
-            
+
             offers.push({
                 description: itemDisplayText,
                 cost: itemCost,
@@ -1137,23 +828,23 @@
                     }
                 }
             });
-            
+
             // Display merchant UI
             inMerchantEncounter = true;
             merchantAreaEl.style.display = "block";
             exploreButton.style.display = "none";
-            
+
             const offer1El = document.getElementById("merchant-offer-1");
             const offer2El = document.getElementById("merchant-offer-2");
             const buyBtn1 = document.getElementById("buy-offer-1-button");
             const buyBtn2 = document.getElementById("buy-offer-2-button");
             const leaveBtn = document.getElementById("leave-merchant-button");
-            
+
             offer1El.innerHTML = offers[0].description;
             offer2El.innerHTML = offers[1].description;
             buyBtn1.innerHTML = `Buy (Cost: ${formatNumber(offers[0].cost)} G)`;
             buyBtn2.innerHTML = `Buy (Cost: ${formatNumber(offers[1].cost)} G)`;
-            
+
             buyBtn1.onclick = offers[0].action;
             buyBtn2.onclick = offers[1].action;
             leaveBtn.onclick = () => {
@@ -1167,7 +858,7 @@
         // Event listeners
         exploreButton.addEventListener("click", () => {
             addLog("You venture deeper into the dungeon...");
-            
+
             // Decrement shrine buff counter
             if (player.shrineBuffRemaining > 0) {
                 player.shrineBuffRemaining--;
@@ -1176,9 +867,9 @@
                 }
                 updatePlayerStatsUI();
             }
-            
+
             const rand = Math.random();
-            
+
             if (firstEncounter) {
                 spawnEnemy();
                 return;
@@ -1218,17 +909,17 @@
             const accessoryAttackBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.flatAttack) || 0;
             let playerEffectiveAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
             let playerDamage = Math.max(1, playerEffectiveAttack - currentEnemy.defense);
-            
+
             // Apply shrine buff if active
             if (player.shrineBuffRemaining > 0) {
                 playerDamage = Math.floor(playerDamage * 1.5);
             }
-            
+
             let critChance = GAME_CONSTANTS.PLAYER_BASE_CRIT_CHANCE + player.level * GAME_CONSTANTS.PLAYER_CRIT_CHANCE_LEVEL_MULTIPLIER;
             if (player.accessory && player.accessory.bonuses && player.accessory.bonuses.critChance) {
                 critChance += player.accessory.bonuses.critChance;
             }
-            
+
             const enemyDisplayName = currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`;
 
             if (Math.random() < critChance) {
@@ -1263,12 +954,12 @@
             const accessoryAttackBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.flatAttack) || 0;
             let totalAttack = player.baseAttack + player.weapon.bonus + (player.weapon.attackBonus || 0) + accessoryAttackBonus;
             let fireballDamage = Math.max(1, (totalAttack * 4) - currentEnemy.defense);
-            
+
             // Apply shrine buff if active
             if (player.shrineBuffRemaining > 0) {
                 fireballDamage = Math.floor(fireballDamage * 1.5);
             }
-            
+
             const enemyDisplayName = currentEnemy.isElite ? `<span class="elite-enemy">${currentEnemy.name}</span>` : `<strong>${currentEnemy.name}</strong>`;
 
             addLog(`You cast <strong style="color:#ff4500;">Fireball</strong> at ${enemyDisplayName} for <strong style="color:#ff8c00;">${formatNumber(fireballDamage)}</strong> damage!`);
@@ -1288,13 +979,13 @@
             if (player.potions > 0 && player.currentHp < player.maxHp && inCombat) {
                 player.potions--;
                 let healAmount = Math.floor(player.maxHp * (GAME_CONSTANTS.POTION_HEAL_BASE_PERCENT + player.level * GAME_CONSTANTS.POTION_HEAL_LEVEL_MULTIPLIER));
-                
+
                 // Apply accessory potion effectiveness bonus if available
                 const potionBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.potionEffectiveness) || 0;
                 if (potionBonus > 0) {
                     healAmount = Math.floor(healAmount * (1 + potionBonus));
                 }
-                
+
                 player.currentHp = Math.min(player.maxHp, player.currentHp + healAmount);
                 addLog(`You drink a potion and restore <strong>${formatNumber(healAmount)}</strong> HP.`);
                 updatePlayerStatsUI();
@@ -1303,7 +994,7 @@
 
         function enemyTurn() {
             if (!currentEnemy || currentEnemy.currentHp <= 0) return;
-            
+
             const accessoryDefenseBonus = (player.accessory && player.accessory.bonuses && player.accessory.bonuses.flatDefense) || 0;
             let effectivePlayerDefense = (player.baseDefense + player.armor.bonus + (player.weapon.defenseBonus || 0) + accessoryDefenseBonus) * (player.isDefending ? 2 : 1);
             let enemyDamage = Math.max(1, currentEnemy.attack - effectivePlayerDefense);
@@ -1412,5 +1103,169 @@
         // Initialize game
         resetGame();
     </script>
+</head>
+
+<body>
+    <h1>Gradis' Dungeon Delver</h1>
+    <button id="settings-button" class="corner-btn">⚙️ Settings</button>
+    <button id="help-button" class="corner-btn">Help (?)</button>
+
+    <div class="container">
+        <h2>Player Stats</h2>
+        <div class="stats-grid">
+            <div>Level: <strong id="player-level">1</strong></div>
+            <div class="stat-with-progress">
+                <span>XP:</span>
+                <div class="progress-container">
+                    <div class="progress-bar xp-bar" id="xp-progress" style="width: 0%"></div>
+                    <div class="progress-text" id="xp-progress-text">0 / 100</div>
+                </div>
+            </div>
+            <div>Gold: <strong id="player-gold">0</strong></div>
+            <div>Base ATK: <strong id="player-base-attack">4</strong></div>
+            <div>Base DEF: <strong id="player-base-defense">1</strong></div>
+            <div class="stat-with-progress">
+                <span>MP:</span>
+                <div class="progress-container">
+                    <div class="progress-bar mp-bar" id="mp-progress" style="width: 100%"></div>
+                    <div class="progress-text" id="mp-progress-text">15 / 15</div>
+                </div>
+            </div>
+            <div>Total ATK: <strong id="player-total-attack">4</strong></div>
+            <div>Total DEF: <strong id="player-total-defense">1</strong></div>
+        </div>
+        <div class="stat-with-progress" style="margin-bottom: 15px;">
+            <span>HP:</span>
+            <div class="progress-container">
+                <div class="progress-bar hp-bar" id="hp-progress" style="width: 100%"></div>
+                <div class="progress-text" id="hp-progress-text">30 / 30</div>
+            </div>
+        </div>
+        <div class="equipment-grid">
+            <div>Weapon: <span id="player-weapon-name" class="item-name">Crude Club</span>
+                <span id="player-weapon-bonus" class="item-bonus">(+1 ATK)</span>
+                <span id="player-weapon-rarity" class="rarity-Common">[Common]</span>
+            </div>
+            <div>Armor: <span id="player-armor-name" class="item-name">Scavenged Hide</span>
+                <span id="player-armor-bonus" class="item-bonus">(+1 DEF)</span>
+                <span id="player-armor-rarity" class="rarity-Common">[Common]</span>
+            </div>
+            <div>Accessory: <span id="player-accessory-name" class="item-name">None</span>
+                <span id="player-accessory-bonus" class="item-bonus"></span>
+                <span id="player-accessory-rarity" class="rarity-Common"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="enemy-area" style="display: none">
+        <h2>Enemy</h2>
+        <div id="enemy-info"><span id="enemy-name"></span> (<span id="enemy-hp"></span> HP)</div>
+    </div>
+
+    <div class="container" id="merchant-area" style="display: none">
+        <h2 id="merchant-title">Wandering Merchant</h2>
+        <div id="merchant-offer-1" class="merchant-offer">Offer 1...</div>
+        <div id="merchant-offer-2" class="merchant-offer">Offer 2...</div>
+        <div class="merchant-actions">
+            <button id="buy-offer-1-button" class="btn">Buy Offer 1</button>
+            <button id="buy-offer-2-button" class="btn">Buy Offer 2</button>
+            <button id="leave-merchant-button" class="btn">Continue Exploring</button>
+        </div>
+    </div>
+
+    <div class="container actions">
+        <button id="explore-button" class="btn">Explore Dungeon</button>
+        <button id="attack-button" class="btn" style="display: none">Attack</button>
+        <button id="fireball-button" class="btn" style="display: none">Fireball (5 MP)</button>
+        <button id="potion-button" class="btn" style="display: none">Use Potion (<span
+                id="potion-count-button">4</span>)</button>
+    </div>
+
+    <div class="container">
+        <div id="log">
+            <p>Welcome to the Dungeon! Click "Explore" to begin.</p>
+        </div>
+    </div>
+
+    <div class="container" id="game-over-screen" style="display: none">
+        <h2 id="game-over-message">Game Over!</h2>
+        <button id="restart-button" class="btn">Restart Game</button>
+    </div>
+
+    <!-- Modals -->
+    <div id="purchase-confirmation-modal" class="modal">
+        <div class="modal-content">
+            <p id="confirmation-message">Are you sure you want to purchase this item?</p>
+            <div class="modal-actions">
+                <button id="confirm-purchase-button" class="btn">Confirm</button>
+                <button id="cancel-purchase-button" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <h2>Keyboard Shortcuts</h2>
+            <div id="shortcuts-list"
+                style="text-align: left; line-height: 1.6; margin-top: 10px; max-height: 60vh; overflow-y: auto;">
+                <p><strong>Enter:</strong></p>
+                <ul>
+                    <li>Confirm Purchase (in confirmation pop-up)</li>
+                    <li>Restart Game (on Game Over screen)</li>
+                    <li>Explore Dungeon (when available)</li>
+                </ul>
+                <p><strong>Backspace:</strong></p>
+                <ul>
+                    <li>Cancel Purchase (in confirmation pop-up)</li>
+                </ul>
+                <p><strong>Spacebar:</strong> Attack (in combat)</p>
+                <p><strong>F:</strong> Cast Fireball (in combat)</p>
+                <p><strong>P:</strong> Use Potion (in combat)</p>
+                <p><strong>1:</strong> Select/Buy Merchant Offer 1</p>
+                <p><strong>2:</strong> Select/Buy Merchant Offer 2</p>
+                <p><strong>3:</strong> Leave Merchant</p>
+                <hr>
+                <p><strong>Esc:</strong> Close this Help window / Cancel Purchase / Close Settings</p>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px">
+                <button id="close-help-modal-button" class="btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <div class="settings-group">
+                <h3>Number Display Format</h3>
+                <ul>
+                    <li><input type="radio" name="number-format" value="standard" id="format-standard" checked>
+                        <label for="format-standard">Standard (e.g., 1,234,567)</label>
+                    </li>
+                    <li><input type="radio" name="number-format" value="shortened" id="format-shortened">
+                        <label for="format-shortened">Shortened (e.g., 1.23M)</label>
+                    </li>
+                    <li><input type="radio" name="number-format" value="scientific" id="format-scientific">
+                        <label for="format-scientific">Scientific (e.g., 1.23e+6)</label>
+                    </li>
+                </ul>
+            </div>
+            <div class="settings-group">
+                <h3>Theme</h3>
+                <ul>
+                    <li><input type="radio" name="theme-select" value="normal" id="theme-normal" checked>
+                        <label for="theme-normal">Normal (Dark)</label>
+                    </li>
+                    <li><input type="radio" name="theme-select" value="light" id="theme-light">
+                        <label for="theme-light">Light</label>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button id="close-settings-modal-button" class="btn">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
