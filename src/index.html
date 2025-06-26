@@ -950,8 +950,8 @@
                 enemyTemplate = enemyPool[Math.floor(Math.random() * enemyPool.length)];
             }
 
-            const isElite = player.level >= GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_MIN_PLAYER_LEVEL &&
-                !enemyTemplate.isSpecial && !enemyTemplate.isFinalBoss &&
+            const isElite = player.level >= GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_MIN_PLAYER_LEVEL
+                && !enemyTemplate.isFinalBoss &&
                 Math.random() < GAME_CONSTANTS.ELITE_MODIFIERS.SPAWN_CHANCE;
 
             let baseHp = enemyTemplate.baseHp || 20;
