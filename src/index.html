@@ -1292,7 +1292,7 @@
         function encounterMerchant() {
             addLog("You encounter a peculiar Wandering Merchant!");
 
-            // Generate simple merchant offers
+            // TODO: Raise into global state for other systems to manipulate
             const offers = [];
 
             // Offer 1: Healing Potion
@@ -1631,6 +1631,23 @@
 
             if (event.key === "Enter" && isActionable(exploreButton)) {
                 exploreButton.click(); event.preventDefault(); return;
+            }
+
+            if (isActionable(merchantAreaEl) && ["1", "2", "3"].includes(event.key)) {
+                // TODO: Use global offers when implemented
+                switch (event.key) {
+                    case "1":
+                        document.getElementById("buy-offer-1-button").click();
+                        break;
+                    case "2":
+                        document.getElementById("buy-offer-2-button").click();
+                        break;
+                    case "3":
+                        document.getElementById("leave-merchant-button").click();
+                        break;
+                    default:
+                        break;
+                }
             }
         });
 
