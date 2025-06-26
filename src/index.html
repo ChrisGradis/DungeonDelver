@@ -510,15 +510,25 @@
 
         .stat-with-progress {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            gap: 4px;
             min-width: 0;
         }
 
-        .stat-numbers {
+        .stat-with-progress .progress-descriptors {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2px;
+            flex-direction: column;
+            width: fit-content;
+        }
+
+        .stat-with-progress .progress-descriptors>span {
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
         }
     </style>
     <script type="module">
@@ -1630,33 +1640,37 @@
         <h2>Player Stats</h2>
         <div class="stats-grid">
             <div>Level: <strong id="player-level">1</strong></div>
-            <div class="stat-with-progress">
+            <div>Gold: <strong id="player-gold">0</strong></div>
+            <div>Base ATK: <strong id="player-base-attack">4</strong></div>
+            <div>Base DEF: <strong id="player-base-defense">1</strong></div>
+            <div>Total ATK: <strong id="player-total-attack">4</strong></div>
+            <div>Total DEF: <strong id="player-total-defense">1</strong></div>
+        </div>
+        <div class="stat-with-progress" style="margin-bottom: 15px;">
+            <div class="progress-descriptors">
+                <span>HP:</span>
+                <span>MP:</span>
                 <span>XP:</span>
+            </div>
+
+            <div class="stats">
+                <div class="progress-container">
+                    <div class="progress-bar hp-bar" id="hp-progress" style="width: 100%"></div>
+                    <div class="progress-text" id="hp-progress-text">30 / 30</div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar mp-bar" id="mp-progress" style="width: 100%"></div>
+                    <div class="progress-text" id="mp-progress-text">15 / 15</div>
+                </div>
+
                 <div class="progress-container">
                     <div class="progress-bar xp-bar" id="xp-progress" style="width: 0%"></div>
                     <div class="progress-text" id="xp-progress-text">0 / 100</div>
                 </div>
             </div>
-            <div>Gold: <strong id="player-gold">0</strong></div>
-            <div>Base ATK: <strong id="player-base-attack">4</strong></div>
-            <div>Base DEF: <strong id="player-base-defense">1</strong></div>
-            <div class="stat-with-progress">
-                <span>MP:</span>
-                <div class="progress-container">
-                    <div class="progress-bar mp-bar" id="mp-progress" style="width: 100%"></div>
-                    <div class="progress-text" id="mp-progress-text">15 / 15</div>
-                </div>
-            </div>
-            <div>Total ATK: <strong id="player-total-attack">4</strong></div>
-            <div>Total DEF: <strong id="player-total-defense">1</strong></div>
         </div>
-        <div class="stat-with-progress" style="margin-bottom: 15px;">
-            <span>HP:</span>
-            <div class="progress-container">
-                <div class="progress-bar hp-bar" id="hp-progress" style="width: 100%"></div>
-                <div class="progress-text" id="hp-progress-text">30 / 30</div>
-            </div>
-        </div>
+
         <div class="equipment-grid">
             <div>Weapon: <span id="player-weapon-name" class="item-name">Crude Club</span>
                 <span id="player-weapon-bonus" class="item-bonus">(+1 ATK)</span>
