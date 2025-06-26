@@ -905,27 +905,27 @@
                 enemyTemplate = enemies.find(e => e.name === "Goblin Grunt");
             } else {
                 // Define enemy pools based on player level
-                if (player.level <= 2) {
+                if (player.level < 2) {
                     enemyPool = enemies.filter(e => ["Slime", "Bat", "Goblin Grunt"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                } else if (player.level <= 4) {
+                } else if (player.level < 4) {
                     enemyPool = enemies.filter(e => ["Skeleton", "Goblin Grunt", "Cave Spider", "Slime"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                } else if (player.level <= 7) {
+                } else if (player.level < 7) {
                     enemyPool = enemies.filter(e => ["Orc Scout", "Dire Wolf", "Cave Spider", "Skeleton"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                } else if (player.level <= 10) {
+                } else if (player.level < 10) {
                     enemyPool = enemies.filter(e => ["Stone Golem", "Ogre Brute", "Deep Goblin Shaman", "Orc Scout"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                } else if (player.level <= 15) {
+                } else if (player.level < 15) {
                     enemyPool = enemies.filter(e => ["Minotaur Charger", "Wraith", "Deep Goblin Shaman", "Ogre Brute"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                } else if (player.level <= 20) {
-                    enemyPool = enemies.filter(e => ["Dread Knight", "Nether Sorcerer", "Wraith"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
-                } else if (player.level <= 25) {
-                    enemyPool = enemies.filter(e => ["Abyssal Behemoth", "Aspect of Shadow", "Infernal Juggernaut"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
+                } else if (player.level < 20) {
+                    enemyPool = enemies.filter(e => ["Dread Knight", "Nether Sorcerer", "Wraith"].includes(e.name) && !e.isFinalBoss);
+                } else if (player.level < 25) {
+                    enemyPool = enemies.filter(e => ["Abyssal Behemoth", "Aspect of Shadow", "Infernal Juggernaut"].includes(e.name) && !e.isFinalBoss);
                     // Small chance for special bosses at higher levels
                     if (Math.random() < 0.05) {
                         const specialBosses = enemies.filter(e => e.isSpecial && !e.isFinalBoss);
                         if (specialBosses.length > 0) enemyPool.push(specialBosses[Math.floor(Math.random() * specialBosses.length)]);
                     }
-                } else if (player.level <= 30) {
-                    enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isSpecial && !e.isFinalBoss);
+                } else if (player.level < 30) {
+                    enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isFinalBoss);
                     // Higher chance for special bosses
                     if (Math.random() < 0.1) {
                         const specialBosses = enemies.filter(e => e.isSpecial && !e.isFinalBoss);
@@ -933,7 +933,8 @@
                     }
                 } else {
                     // Very high level - mix of endgame enemies
-                    enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name) && !e.isSpecial);
+                    enemyPool = enemies.filter(e => ["Celestial Paladin", "Void Ascendant", "Reality Sculptor"].includes(e.name));
+
                     // Chance for final boss only at very high levels (35+)
                     if (player.level >= 35 && Math.random() < 0.15) {
                         const finalBoss = enemies.find(e => e.isFinalBoss);
