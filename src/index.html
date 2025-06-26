@@ -1292,8 +1292,18 @@
         function encounterMerchant() {
             addLog("You encounter a peculiar Wandering Merchant!");
 
+            const offer1El = document.getElementById("merchant-offer-1");
+            const offer2El = document.getElementById("merchant-offer-2");
+            const buyBtn1 = document.getElementById("buy-offer-1-button");
+            const buyBtn2 = document.getElementById("buy-offer-2-button");
+            const leaveBtn = document.getElementById("leave-merchant-button");
             // TODO: Raise into global state for other systems to manipulate
             const offers = [];
+            const bought = [false, false];
+
+            const disablePurchaseButton = (button) => {
+                button.disabled = true;
+            };
 
             // Offer 1: Healing Potion
             const potionCost = Math.floor(10 + player.level * 1.5 + player.maxHp * 0.03);
@@ -1301,9 +1311,15 @@
                 description: "Health Potion",
                 cost: potionCost,
                 action: () => {
-                    if (player.potions < player.maxPotions && player.gold >= potionCost) {
+                    const offerBought = bought[0] === true;
+
+                    if (offerBought) {
+                        addLog(`You can't buy any more potions!`);
+                    } else if (player.potions < player.maxPotions && player.gold >= potionCost) {
                         player.gold -= potionCost;
                         player.potions++;
+                        bought[0] = true;
+                        disablePurchaseButton(buyBtn1);
                         addLog(`You bought a Health Potion for ${formatNumber(potionCost)} Gold.`);
                         updatePlayerStatsUI();
                     } else if (player.potions >= player.maxPotions) {
@@ -1354,8 +1370,14 @@
                 cost: itemCost,
                 item: merchantItem,
                 action: () => {
-                    if (player.gold >= itemCost) {
+                    const offerBought = bought[1] === true;
+
+                    if (offerBought) {
+                        addLog(`You can't buy any more potions!`);
+                    } else if (player.gold >= itemCost) {
                         player.gold -= itemCost;
+                        bought[1] = true;
+                        disablePurchaseButton(buyBtn2);
                         addLog(`You bought <span class="rarity-${merchantItem.rarity}">${merchantItem.name}</span> for ${formatNumber(itemCost)} Gold.`);
                         tryEquipItem(merchantItem);
                         updatePlayerStatsUI();
@@ -1370,12 +1392,6 @@
             merchantAreaEl.style.display = "block";
             exploreButton.style.display = "none";
 
-            const offer1El = document.getElementById("merchant-offer-1");
-            const offer2El = document.getElementById("merchant-offer-2");
-            const buyBtn1 = document.getElementById("buy-offer-1-button");
-            const buyBtn2 = document.getElementById("buy-offer-2-button");
-            const leaveBtn = document.getElementById("leave-merchant-button");
-
             offer1El.innerHTML = offers[0].description;
             offer2El.innerHTML = offers[1].description;
             buyBtn1.innerHTML = `Buy (Cost: ${formatNumber(offers[0].cost)} G)`;
@@ -1388,6 +1404,8 @@
                 inMerchantEncounter = false;
                 merchantAreaEl.style.display = "none";
                 exploreButton.style.display = "block";
+                buyBtn1.disabled = false;
+                buyBtn2.disabled = false;
             };
         }
 
