@@ -70,7 +70,6 @@
             border: 1px solid var(--border);
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            margin-bottom: 10px;
             transition: all 0.3s;
         }
 
@@ -85,7 +84,6 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 10px;
-            margin-bottom: 15px;
             font-size: 0.9em;
         }
 
@@ -108,7 +106,6 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 5px;
-            margin-top: 10px;
             font-size: 0.85em;
         }
 
@@ -198,7 +195,6 @@
         #enemy-info,
         #merchant-area {
             text-align: center;
-            margin-bottom: 15px;
             padding: 10px;
             border-radius: 3px;
             min-height: 50px;
@@ -251,10 +247,6 @@
 
         #log p:last-child {
             border-bottom: none;
-        }
-
-        .actions {
-            margin-bottom: 15px;
         }
 
         .btn {
@@ -383,6 +375,7 @@
         .settings-group h3 {
             color: #61dafb;
             font-size: 1.05em;
+            gap: 10px;
             margin-bottom: 8px;
         }
 
@@ -529,6 +522,20 @@
             display: flex;
             flex-direction: column;
             width: 100%;
+        }
+
+        .player-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-elements {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
         }
     </style>
     <script type="module">
@@ -1636,163 +1643,169 @@
     <button id="settings-button" class="corner-btn">⚙️ Settings</button>
     <button id="help-button" class="corner-btn">Help (?)</button>
 
-    <div class="container">
-        <h2>Player Stats</h2>
-        <div class="stats-grid">
-            <div>Level: <strong id="player-level">1</strong></div>
-            <div>Gold: <strong id="player-gold">0</strong></div>
-            <div>Base ATK: <strong id="player-base-attack">4</strong></div>
-            <div>Base DEF: <strong id="player-base-defense">1</strong></div>
-            <div>Total ATK: <strong id="player-total-attack">4</strong></div>
-            <div>Total DEF: <strong id="player-total-defense">1</strong></div>
-        </div>
-        <div class="stat-with-progress" style="margin-bottom: 15px;">
-            <div class="progress-descriptors">
-                <span>HP:</span>
-                <span>MP:</span>
-                <span>XP:</span>
-            </div>
+    <div class="game-elements">
+        <div class="container">
+            <h2>Player Stats</h2>
 
-            <div class="stats">
-                <div class="progress-container">
-                    <div class="progress-bar hp-bar" id="hp-progress" style="width: 100%"></div>
-                    <div class="progress-text" id="hp-progress-text">30 / 30</div>
+            <div class="player-stats">
+                <div class="stats-grid">
+                    <div>Level: <strong id="player-level">1</strong></div>
+                    <div>Gold: <strong id="player-gold">0</strong></div>
+                    <div>Base ATK: <strong id="player-base-attack">4</strong></div>
+                    <div>Base DEF: <strong id="player-base-defense">1</strong></div>
+                    <div>Total ATK: <strong id="player-total-attack">4</strong></div>
+                    <div>Total DEF: <strong id="player-total-defense">1</strong></div>
                 </div>
 
-                <div class="progress-container">
-                    <div class="progress-bar mp-bar" id="mp-progress" style="width: 100%"></div>
-                    <div class="progress-text" id="mp-progress-text">15 / 15</div>
+                <div class="equipment-grid">
+                    <div>Weapon: <span id="player-weapon-name" class="item-name">Crude Club</span>
+                        <span id="player-weapon-bonus" class="item-bonus">(+1 ATK)</span>
+                        <span id="player-weapon-rarity" class="rarity-Common">[Common]</span>
+                    </div>
+                    <div>Armor: <span id="player-armor-name" class="item-name">Scavenged Hide</span>
+                        <span id="player-armor-bonus" class="item-bonus">(+1 DEF)</span>
+                        <span id="player-armor-rarity" class="rarity-Common">[Common]</span>
+                    </div>
+                    <div>Accessory: <span id="player-accessory-name" class="item-name">None</span>
+                        <span id="player-accessory-bonus" class="item-bonus"></span>
+                        <span id="player-accessory-rarity" class="rarity-Common"></span>
+                    </div>
                 </div>
 
-                <div class="progress-container">
-                    <div class="progress-bar xp-bar" id="xp-progress" style="width: 0%"></div>
-                    <div class="progress-text" id="xp-progress-text">0 / 100</div>
+                <div class="stat-with-progress">
+                    <div class="progress-descriptors">
+                        <span>HP:</span>
+                        <span>MP:</span>
+                        <span>XP:</span>
+                    </div>
+
+                    <div class="stats">
+                        <div class="progress-container">
+                            <div class="progress-bar hp-bar" id="hp-progress" style="width: 100%"></div>
+                            <div class="progress-text" id="hp-progress-text">30 / 30</div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-bar mp-bar" id="mp-progress" style="width: 100%"></div>
+                            <div class="progress-text" id="mp-progress-text">15 / 15</div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-bar xp-bar" id="xp-progress" style="width: 0%"></div>
+                            <div class="progress-text" id="xp-progress-text">0 / 100</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="equipment-grid">
-            <div>Weapon: <span id="player-weapon-name" class="item-name">Crude Club</span>
-                <span id="player-weapon-bonus" class="item-bonus">(+1 ATK)</span>
-                <span id="player-weapon-rarity" class="rarity-Common">[Common]</span>
-            </div>
-            <div>Armor: <span id="player-armor-name" class="item-name">Scavenged Hide</span>
-                <span id="player-armor-bonus" class="item-bonus">(+1 DEF)</span>
-                <span id="player-armor-rarity" class="rarity-Common">[Common]</span>
-            </div>
-            <div>Accessory: <span id="player-accessory-name" class="item-name">None</span>
-                <span id="player-accessory-bonus" class="item-bonus"></span>
-                <span id="player-accessory-rarity" class="rarity-Common"></span>
+        <div class="container" id="enemy-area" style="display: none">
+            <h2>Enemy</h2>
+            <div id="enemy-info"><span id="enemy-name"></span> (<span id="enemy-hp"></span> HP)</div>
+        </div>
+
+        <div class="container" id="merchant-area" style="display: none">
+            <h2 id="merchant-title">Wandering Merchant</h2>
+            <div id="merchant-offer-1" class="merchant-offer">Offer 1...</div>
+            <div id="merchant-offer-2" class="merchant-offer">Offer 2...</div>
+            <div class="merchant-actions">
+                <button id="buy-offer-1-button" class="btn">Buy Offer 1</button>
+                <button id="buy-offer-2-button" class="btn">Buy Offer 2</button>
+                <button id="leave-merchant-button" class="btn">Continue Exploring</button>
             </div>
         </div>
-    </div>
 
-    <div class="container" id="enemy-area" style="display: none">
-        <h2>Enemy</h2>
-        <div id="enemy-info"><span id="enemy-name"></span> (<span id="enemy-hp"></span> HP)</div>
-    </div>
-
-    <div class="container" id="merchant-area" style="display: none">
-        <h2 id="merchant-title">Wandering Merchant</h2>
-        <div id="merchant-offer-1" class="merchant-offer">Offer 1...</div>
-        <div id="merchant-offer-2" class="merchant-offer">Offer 2...</div>
-        <div class="merchant-actions">
-            <button id="buy-offer-1-button" class="btn">Buy Offer 1</button>
-            <button id="buy-offer-2-button" class="btn">Buy Offer 2</button>
-            <button id="leave-merchant-button" class="btn">Continue Exploring</button>
+        <div class="container">
+            <button id="explore-button" class="btn">Explore Dungeon</button>
+            <button id="attack-button" class="btn" style="display: none">Attack</button>
+            <button id="fireball-button" class="btn" style="display: none">Fireball (5 MP)</button>
+            <button id="potion-button" class="btn" style="display: none">Use Potion (<span
+                    id="potion-count-button">4</span>)</button>
         </div>
-    </div>
 
-    <div class="container actions">
-        <button id="explore-button" class="btn">Explore Dungeon</button>
-        <button id="attack-button" class="btn" style="display: none">Attack</button>
-        <button id="fireball-button" class="btn" style="display: none">Fireball (5 MP)</button>
-        <button id="potion-button" class="btn" style="display: none">Use Potion (<span
-                id="potion-count-button">4</span>)</button>
-    </div>
-
-    <div class="container">
-        <div id="log">
-            <p>Welcome to the Dungeon! Click "Explore" to begin.</p>
-        </div>
-    </div>
-
-    <div class="container" id="game-over-screen" style="display: none">
-        <h2 id="game-over-message">Game Over!</h2>
-        <button id="restart-button" class="btn">Restart Game</button>
-    </div>
-
-    <!-- Modals -->
-    <div id="purchase-confirmation-modal" class="modal">
-        <div class="modal-content">
-            <p id="confirmation-message">Are you sure you want to purchase this item?</p>
-            <div class="modal-actions">
-                <button id="confirm-purchase-button" class="btn">Confirm</button>
-                <button id="cancel-purchase-button" class="btn">Cancel</button>
+        <div class="container">
+            <div id="log">
+                <p>Welcome to the Dungeon! Click "Explore" to begin.</p>
             </div>
         </div>
-    </div>
 
-    <div id="help-modal" class="modal">
-        <div class="modal-content">
-            <h2>Keyboard Shortcuts</h2>
-            <div id="shortcuts-list"
-                style="text-align: left; line-height: 1.6; margin-top: 10px; max-height: 60vh; overflow-y: auto;">
-                <p><strong>Enter:</strong></p>
-                <ul>
-                    <li>Confirm Purchase (in confirmation pop-up)</li>
-                    <li>Restart Game (on Game Over screen)</li>
-                    <li>Explore Dungeon (when available)</li>
-                </ul>
-                <p><strong>Backspace:</strong></p>
-                <ul>
-                    <li>Cancel Purchase (in confirmation pop-up)</li>
-                </ul>
-                <p><strong>Spacebar:</strong> Attack (in combat)</p>
-                <p><strong>F:</strong> Cast Fireball (in combat)</p>
-                <p><strong>P:</strong> Use Potion (in combat)</p>
-                <p><strong>1:</strong> Select/Buy Merchant Offer 1</p>
-                <p><strong>2:</strong> Select/Buy Merchant Offer 2</p>
-                <p><strong>3:</strong> Leave Merchant</p>
-                <hr>
-                <p><strong>Esc:</strong> Close this Help window / Cancel Purchase / Close Settings</p>
-            </div>
-            <div class="modal-actions" style="margin-top: 15px">
-                <button id="close-help-modal-button" class="btn">Close</button>
+        <div class="container" id="game-over-screen" style="display: none">
+            <h2 id="game-over-message">Game Over!</h2>
+            <button id="restart-button" class="btn">Restart Game</button>
+        </div>
+
+        <!-- Modals -->
+        <div id="purchase-confirmation-modal" class="modal">
+            <div class="modal-content">
+                <p id="confirmation-message">Are you sure you want to purchase this item?</p>
+                <div class="modal-actions">
+                    <button id="confirm-purchase-button" class="btn">Confirm</button>
+                    <button id="cancel-purchase-button" class="btn">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h2>Settings</h2>
-            <div class="settings-group">
-                <h3>Number Display Format</h3>
-                <ul>
-                    <li><input type="radio" name="number-format" value="standard" id="format-standard" checked>
-                        <label for="format-standard">Standard (e.g., 1,234,567)</label>
-                    </li>
-                    <li><input type="radio" name="number-format" value="shortened" id="format-shortened">
-                        <label for="format-shortened">Shortened (e.g., 1.23M)</label>
-                    </li>
-                    <li><input type="radio" name="number-format" value="scientific" id="format-scientific">
-                        <label for="format-scientific">Scientific (e.g., 1.23e+6)</label>
-                    </li>
-                </ul>
+        <div id="help-modal" class="modal">
+            <div class="modal-content">
+                <h2>Keyboard Shortcuts</h2>
+                <div id="shortcuts-list"
+                    style="text-align: left; line-height: 1.6; margin-top: 10px; max-height: 60vh; overflow-y: auto;">
+                    <p><strong>Enter:</strong></p>
+                    <ul>
+                        <li>Confirm Purchase (in confirmation pop-up)</li>
+                        <li>Restart Game (on Game Over screen)</li>
+                        <li>Explore Dungeon (when available)</li>
+                    </ul>
+                    <p><strong>Backspace:</strong></p>
+                    <ul>
+                        <li>Cancel Purchase (in confirmation pop-up)</li>
+                    </ul>
+                    <p><strong>Spacebar:</strong> Attack (in combat)</p>
+                    <p><strong>F:</strong> Cast Fireball (in combat)</p>
+                    <p><strong>P:</strong> Use Potion (in combat)</p>
+                    <p><strong>1:</strong> Select/Buy Merchant Offer 1</p>
+                    <p><strong>2:</strong> Select/Buy Merchant Offer 2</p>
+                    <p><strong>3:</strong> Leave Merchant</p>
+                    <hr>
+                    <p><strong>Esc:</strong> Close this Help window / Cancel Purchase / Close Settings</p>
+                </div>
+                <div class="modal-actions" style="margin-top: 15px">
+                    <button id="close-help-modal-button" class="btn">Close</button>
+                </div>
             </div>
-            <div class="settings-group">
-                <h3>Theme</h3>
-                <ul>
-                    <li><input type="radio" name="theme-select" value="normal" id="theme-normal" checked>
-                        <label for="theme-normal">Normal (Dark)</label>
-                    </li>
-                    <li><input type="radio" name="theme-select" value="light" id="theme-light">
-                        <label for="theme-light">Light</label>
-                    </li>
-                </ul>
-            </div>
-            <div class="modal-actions" style="margin-top: 15px;">
-                <button id="close-settings-modal-button" class="btn">Close</button>
+        </div>
+
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <h2>Settings</h2>
+                <div class="settings-group">
+                    <h3>Number Display Format</h3>
+                    <ul>
+                        <li><input type="radio" name="number-format" value="standard" id="format-standard" checked>
+                            <label for="format-standard">Standard (e.g., 1,234,567)</label>
+                        </li>
+                        <li><input type="radio" name="number-format" value="shortened" id="format-shortened">
+                            <label for="format-shortened">Shortened (e.g., 1.23M)</label>
+                        </li>
+                        <li><input type="radio" name="number-format" value="scientific" id="format-scientific">
+                            <label for="format-scientific">Scientific (e.g., 1.23e+6)</label>
+                        </li>
+                    </ul>
+                </div>
+                <div class="settings-group">
+                    <h3>Theme</h3>
+                    <ul>
+                        <li><input type="radio" name="theme-select" value="normal" id="theme-normal" checked>
+                            <label for="theme-normal">Normal (Dark)</label>
+                        </li>
+                        <li><input type="radio" name="theme-select" value="light" id="theme-light">
+                            <label for="theme-light">Light</label>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button id="close-settings-modal-button" class="btn">Close</button>
+                </div>
             </div>
         </div>
     </div>
