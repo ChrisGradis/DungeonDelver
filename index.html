@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Gradis' Dungeon Delver</title>
+  </head>
+  <body>
+    <h1>Gradis' Dungeon Delver</h1>
+    <button id="settings-button" class="corner-btn">⚙️ Settings</button>
+    <button id="help-button" class="corner-btn">Help (?)</button>
+
+    <div class="container" id="player-stats-area">
+      <h2>Player Stats</h2>
+      <div class="stats-grid">
+        <div>
+          Level: <strong id="player-level">1</strong>
+          <div class="progress-container">
+            <div id="xp-bar" class="progress-bar xp-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div>
+          XP: <strong id="player-xp">0 / 100</strong>
+        </div>
+        <div>
+          HP: <strong id="player-hp">25 / 25</strong>
+          <div class="progress-container">
+            <div id="hp-bar" class="progress-bar hp-bar" style="width: 100%"></div>
+          </div>
+        </div>
+        <div>Base ATK: <strong id="player-base-attack">3</strong></div>
+        <div>Base DEF: <strong id="player-base-defense">1</strong></div>
+        <div>Gold: <strong id="player-gold">0</strong></div>
+        <div>Total ATK: <strong id="player-total-attack">3</strong></div>
+        <div>Total DEF: <strong id="player-total-defense">1</strong></div>
+      </div>
+      <div class="equipment-grid">
+        <div>
+          Weapon: <span id="player-weapon-name" class="item-name">Old Stick</span>
+          <span id="player-weapon-bonus" class="item-bonus">(+0 ATK)</span>
+          <span id="player-weapon-rarity" class="rarity-Common">[Common]</span>
+        </div>
+        <div>
+          Armor: <span id="player-armor-name" class="item-name">Torn Shirt</span>
+          <span id="player-armor-bonus" class="item-bonus">(+0 DEF)</span>
+          <span id="player-armor-rarity" class="rarity-Common">[Common]</span>
+        </div>
+        <div>
+          Accessory: <span id="player-accessory-name" class="item-name">None</span>
+          <span id="player-accessory-bonus" class="item-bonus"></span>
+          <span id="player-accessory-rarity" class="rarity-Common"></span>
+        </div>
+        <div>
+          Pet: <span id="player-pet-name" class="item-name">None</span>
+          <span id="player-pet-bonus" class="item-bonus"></span>
+          <span id="player-pet-rarity" class="rarity-Common"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" id="enemy-area" style="display: none">
+      <h2>Enemy</h2>
+      <div id="enemy-info">
+        <span id="enemy-name"></span> (<span id="enemy-hp"></span>)
+        <div class="progress-container">
+          <div id="enemy-hp-bar" class="progress-bar enemy-hp-bar" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" id="merchant-area" style="display: none">
+      <h2 id="merchant-title">Wandering Merchant</h2>
+      <div id="merchant-offer-1" class="merchant-offer">Offer 1...</div>
+      <div id="merchant-offer-2" class="merchant-offer">Offer 2...</div>
+      <div class="merchant-actions">
+        <button id="buy-offer-1-button">Buy Offer 1</button>
+        <button id="buy-offer-2-button">Buy Offer 2</button>
+        <button id="leave-merchant-button">Continue Exploring</button>
+      </div>
+    </div>
+
+    <div class="container actions">
+      <button id="explore-button" class="btn">Explore Dungeon</button>
+      <button id="attack-button" class="btn" style="display: none">Attack</button>
+      <button id="defend-button" class="btn" style="display: none">Defend (Reduces Dmg)</button>
+      <button id="potion-button" class="btn" style="display: none">
+        Use Potion (<span id="potion-count-button">3</span>)
+      </button>
+    </div>
+
+    <div class="container">
+      <div id="log">
+        <p>Welcome to the Dungeon! Click "Explore" to begin.</p>
+      </div>
+    </div>
+
+    <div class="container" id="game-over-screen" style="display: none">
+      <h2 id="game-over-message">Game Over!</h2>
+      <button id="restart-button" class="btn">Restart Game</button>
+    </div>
+
+    <div id="help-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Keyboard Shortcuts</h2>
+        <div
+          id="shortcuts-list"
+          style="text-align: left; line-height: 1.6; margin-top: 10px; max-height: 60vh; overflow-y: auto"
+        >
+          <p><strong>Enter:</strong></p>
+          <ul>
+            <li>Restart Game (on Game Over screen)</li>
+            <li>Explore Dungeon (when available)</li>
+          </ul>
+          <p><strong>Spacebar:</strong> Attack (in combat)</p>
+          <p><strong>D:</strong> Defend (in combat)</p>
+          <p><strong>P:</strong> Use Potion (in combat)</p>
+          <hr />
+          <p><strong>Esc:</strong> Close this Help window / Close Settings</p>
+        </div>
+        <div class="modal-actions" style="margin-top: 15px">
+          <button id="close-help-modal-button" class="btn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Settings</h2>
+        <div class="settings-group">
+          <h3>Number Display Format</h3>
+          <ul>
+            <li>
+              <input type="radio" name="number-format" value="standard" id="format-standard" checked />
+              <label for="format-standard">Standard (e.g., 1,234,567)</label>
+            </li>
+            <li>
+              <input type="radio" name="number-format" value="shortened" id="format-shortened" />
+              <label for="format-shortened">Shortened (e.g., 1.23M)</label>
+            </li>
+            <li>
+              <input type="radio" name="number-format" value="scientific" id="format-scientific" />
+              <label for="format-scientific">Scientific (e.g., 1.23e+6)</label>
+            </li>
+          </ul>
+        </div>
+        <div class="settings-group">
+          <h3>Theme</h3>
+          <ul>
+            <li>
+              <input type="radio" name="theme" value="normal" id="theme-normal" checked />
+              <label for="theme-normal">Normal (Dark)</label>
+            </li>
+            <li>
+              <input type="radio" name="theme" value="light" id="theme-light" />
+              <label for="theme-light">Light</label>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-actions" style="margin-top: 15px">
+          <button id="close-settings-modal-button" class="btn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>
